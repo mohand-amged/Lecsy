@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useRef, useEffect } from "react"
 import {
   Upload,
@@ -33,6 +33,7 @@ import {
   Volume2,
   Clock,
   Calendar,
+  Menu,
 } from "lucide-react"
 
 interface Toast {
@@ -64,6 +65,7 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isWelcomeDismissed, setIsWelcomeDismissed] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -294,34 +296,135 @@ export default function DashboardPage() {
 
   const todaySessions = chatHistory.filter((chat) => chat.date.includes("hour") || chat.date === "Today").length
 
+  const SidebarContent = () => (
+    <>
+      {/* Sidebar Header */}
+      <div className="p-3 md:p-4 border-b border-border space-y-3">
+        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg glow-primary transition-all duration-300 group h-9 md:h-10">
+          <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+          New Chat
+        </Button>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            id="search-input"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-12 h-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20"
+          />
+          <kbd className="hidden md:block absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs text-muted-foreground bg-muted rounded border border-border">
+            ⌘K
+          </kbd>
+        </div>
+      </div>
+
+      {/* Chat History */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-custom">
+        {filteredChats.length > 0 ? (
+          filteredChats.map((chat) => (
+            <Card
+              key={chat.id}
+              className={`cursor-pointer transition-all duration-200 border group ${
+                selectedChat === chat.id
+                  ? "bg-primary/10 border-primary/30 shadow-lg"
+                  : "bg-card/50 border-border hover:bg-card hover:border-border/50"
+              }`}
+              onClick={() => {
+                setSelectedChat(chat.id)
+                setIsMobileSidebarOpen(false)
+              }}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-start gap-2">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      selectedChat === chat.id ? "bg-primary" : "bg-secondary"
+                    }`}
+                  >
+                    <FileAudio className="w-4 h-4 text-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm text-foreground truncate">{chat.title}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="text-xs text-muted-foreground">{chat.date}</p>
+                      {chat.duration && (
+                        <>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {chat.duration}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{chat.preview}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : searchQuery ? (
+          <div className="flex flex-col items-center justify-center h-full text-center py-12">
+            <Search className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-sm font-semibold text-foreground mb-2">No results found</h3>
+            <p className="text-xs text-muted-foreground px-4">Try adjusting your search terms</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center py-12">
+            <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center mb-4">
+              <FileAudio className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">No transcriptions yet</h3>
+            <p className="text-xs text-muted-foreground mb-4 px-4">Upload your first recording to get started</p>
+          </div>
+        )}
+      </div>
+    </>
+  )
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-30"></div>
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl"></div>
 
-      {/*Navbar */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-card/50 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center glow-primary">
-            <Sparkles className="w-4 h-4 text-white" />
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 h-14 md:h-16 bg-card/50 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-3 md:px-6">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] p-0 bg-card/95 backdrop-blur-xl">
+              <div className="flex flex-col h-full">
+                <SidebarContent />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center glow-primary">
+            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
           </div>
-          <h1 className="text-lg font-bold text-foreground">AI Transcribe</h1>
+          <h1 className="text-base md:text-lg font-bold text-foreground">AI Transcribe</h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/50 rounded-lg border border-border">
-            <Clock className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="hidden sm:flex items-center gap-2 px-2 md:px-3 py-1.5 bg-secondary/50 rounded-lg border border-border">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground leading-none">Today</span>
-              <span className="text-sm font-bold text-foreground leading-none mt-0.5">{todaySessions}</span>
+              <span className="text-xs md:text-sm font-bold text-foreground leading-none mt-0.5">{todaySessions}</span>
             </div>
           </div>
 
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary relative h-8 w-8"
+            className="text-muted-foreground hover:text-foreground hover:bg-secondary relative h-8 w-8 md:h-9 md:w-9"
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
@@ -330,12 +433,12 @@ export default function DashboardPage() {
           <div className="relative" ref={profileMenuRef}>
             <button
               onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-all duration-200 group"
+              className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-all duration-200 group"
             >
-              <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 md:w-7 md:h-7 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xs">S</span>
               </div>
-              <span className="text-sm font-medium text-foreground">Student</span>
+              <span className="hidden sm:block text-sm font-medium text-foreground">Student</span>
               <ChevronDown
                 className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
               />
@@ -370,99 +473,21 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex h-screen relative z-10 pt-14">
-        {/* Sidebar */}
-        <div className="w-64 bg-card/50 backdrop-blur-xl border-r border-border flex flex-col">
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-border space-y-3">
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg glow-primary transition-all duration-300 group h-9">
-              <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-              New Chat
-            </Button>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="search-input"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-12 h-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20"
-              />
-              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs text-muted-foreground bg-muted rounded border border-border">
-                ⌘K
-              </kbd>
-            </div>
-          </div>
-
-          {/* Chat History */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-custom">
-            {filteredChats.length > 0 ? (
-              filteredChats.map((chat) => (
-                <Card
-                  key={chat.id}
-                  className={`cursor-pointer transition-all duration-200 border group ${
-                    selectedChat === chat.id
-                      ? "bg-primary/10 border-primary/30 shadow-lg"
-                      : "bg-card/50 border-border hover:bg-card hover:border-border/50"
-                  }`}
-                  onClick={() => setSelectedChat(chat.id)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          selectedChat === chat.id ? "bg-primary" : "bg-secondary"
-                        }`}
-                      >
-                        <FileAudio className="w-4 h-4 text-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm text-foreground truncate">{chat.title}</h3>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <p className="text-xs text-muted-foreground">{chat.date}</p>
-                          {chat.duration && (
-                            <>
-                              <span className="text-xs text-muted-foreground">•</span>
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {chat.duration}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{chat.preview}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : searchQuery ? (
-              <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                <Search className="w-12 h-12 text-muted-foreground mb-4" />
-                <h3 className="text-sm font-semibold text-foreground mb-2">No results found</h3>
-                <p className="text-xs text-muted-foreground px-4">Try adjusting your search terms</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center mb-4">
-                  <FileAudio className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground mb-2">No transcriptions yet</h3>
-                <p className="text-xs text-muted-foreground mb-4 px-4">Upload your first recording to get started</p>
-              </div>
-            )}
-          </div>
+      <div className="flex h-screen relative z-10 pt-14 md:pt-16">
+        <div className="hidden md:flex w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col">
+          <SidebarContent />
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {!isWelcomeDismissed && (
-            <div className="bg-card/30 backdrop-blur-xl border-b border-border px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-foreground mb-1 text-balance">Welcome back, Student! 👋</h2>
-                  <p className="text-muted-foreground text-sm">
+            <div className="bg-card/30 backdrop-blur-xl border-b border-border px-3 md:px-6 py-3 md:py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg md:text-2xl font-bold text-foreground mb-1 text-balance">
+                    Welcome back, Student! 👋
+                  </h2>
+                  <p className="text-muted-foreground text-xs md:text-sm">
                     Upload your recordings and get AI-powered transcriptions instantly
                   </p>
                 </div>
@@ -471,7 +496,7 @@ export default function DashboardPage() {
                   variant="ghost"
                   size="icon"
                   onClick={handleDismissWelcome}
-                  className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8 ml-4"
+                  className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8 flex-shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -482,69 +507,71 @@ export default function DashboardPage() {
           <div className="flex-1 overflow-y-auto scrollbar-custom">
             {selectedChatData ? (
               // Chat Detail View
-              <div className="max-w-5xl mx-auto p-6 animate-fade-in">
+              <div className="max-w-5xl mx-auto p-3 md:p-6 animate-fade-in">
                 {/* Chat Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedChat(null)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground h-8 md:h-9"
                       >
                         <X className="w-4 h-4 mr-2" />
                         Close
                       </Button>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-sm text-muted-foreground">Press ESC to close</span>
+                      <span className="hidden md:inline text-muted-foreground">•</span>
+                      <span className="hidden md:inline text-sm text-muted-foreground">Press ESC to close</span>
                     </div>
-                    <h2 className="text-3xl font-bold text-foreground mb-2 text-balance">{selectedChatData.title}</h2>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <h2 className="text-xl md:text-3xl font-bold text-foreground mb-2 text-balance">
+                      {selectedChatData.title}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
                         {selectedChatData.date}
                       </span>
                       {selectedChatData.duration && (
                         <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
+                          <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
                           {selectedChatData.duration}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopyTranscript(selectedChatData.transcript || "")}
-                      className="border-border hover:bg-secondary"
+                      className="border-border hover:bg-secondary flex-1 sm:flex-none"
                     >
                       {copiedId === "transcript" ? (
-                        <Check className="w-4 h-4 mr-2 text-green-500" />
+                        <Check className="w-4 h-4 sm:mr-2 text-green-500" />
                       ) : (
-                        <Copy className="w-4 h-4 mr-2" />
+                        <Copy className="w-4 h-4 sm:mr-2" />
                       )}
-                      Copy
+                      <span className="hidden sm:inline">Copy</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-border hover:bg-secondary bg-transparent"
+                      className="border-border hover:bg-secondary bg-transparent flex-1 sm:flex-none"
                       onClick={() => addToast("Download started", "success")}
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Export
+                      <Download className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Export</span>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-border hover:bg-secondary bg-transparent"
+                      className="border-border hover:bg-secondary bg-transparent flex-1 sm:flex-none"
                       onClick={() => addToast("Share link copied", "success")}
                     >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
+                      <Share2 className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Share</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -562,21 +589,21 @@ export default function DashboardPage() {
 
                 {/* Audio Player */}
                 <Card className="border-border bg-card/50 mb-6">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       <Button
                         size="icon"
-                        className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 glow-primary"
+                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary hover:bg-primary/90 glow-primary flex-shrink-0"
                         onClick={() => setIsPlaying(!isPlaying)}
                       >
                         {isPlaying ? (
-                          <Pause className="w-5 h-5 text-white" />
+                          <Pause className="w-5 h-5 md:w-6 md:h-6 text-white" />
                         ) : (
-                          <Play className="w-5 h-5 text-white ml-0.5" />
+                          <Play className="w-5 h-5 md:w-6 md:h-6 text-white ml-0.5" />
                         )}
                       </Button>
 
-                      <div className="flex-1">
+                      <div className="flex-1 w-full">
                         <div className="w-full bg-secondary rounded-full h-2 mb-2">
                           <div className="h-full bg-primary rounded-full w-1/3"></div>
                         </div>
@@ -587,13 +614,25 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-foreground h-9 w-9"
+                        >
                           <SkipBack className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-foreground h-9 w-9"
+                        >
                           <SkipForward className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground hover:text-foreground h-9 w-9"
+                        >
                           <Volume2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -605,13 +644,13 @@ export default function DashboardPage() {
                 {selectedChatData.summary && (
                   <Card className="border-border bg-gradient-to-br from-primary/5 to-accent/5 mb-6">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground">
-                        <Sparkles className="w-5 h-5 text-primary" />
+                      <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
+                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                         AI Summary
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-foreground leading-relaxed">{selectedChatData.summary}</p>
+                      <p className="text-foreground leading-relaxed text-sm md:text-base">{selectedChatData.summary}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -620,19 +659,19 @@ export default function DashboardPage() {
                 {selectedChatData.keyPoints && (
                   <Card className="border-border bg-card/50 mb-6">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground">
-                        <Lightbulb className="w-5 h-5 text-accent" />
+                      <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
+                        <Lightbulb className="w-4 h-4 md:w-5 md:h-5 text-accent" />
                         Key Points
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-2">
+                      <ul className="space-y-2 md:space-y-3">
                         {selectedChatData.keyPoints.map((point, index) => (
                           <li key={index} className="flex items-start gap-3">
                             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                               <span className="text-xs font-bold text-primary">{index + 1}</span>
                             </div>
-                            <span className="text-foreground leading-relaxed">{point}</span>
+                            <span className="text-foreground leading-relaxed text-sm md:text-base">{point}</span>
                           </li>
                         ))}
                       </ul>
@@ -643,14 +682,14 @@ export default function DashboardPage() {
                 {/* Full Transcript */}
                 <Card className="border-border bg-card/50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-foreground">
-                      <FileAudio className="w-5 h-5" />
+                    <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
+                      <FileAudio className="w-4 h-4 md:w-5 md:h-5" />
                       Full Transcript
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="prose prose-invert max-w-none">
-                      <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                      <p className="text-foreground leading-relaxed whitespace-pre-wrap text-sm md:text-base">
                         {selectedChatData.transcript}
                       </p>
                     </div>
@@ -659,28 +698,30 @@ export default function DashboardPage() {
               </div>
             ) : (
               // Upload Section
-              <div className="max-w-5xl mx-auto p-6">
+              <div className="max-w-5xl mx-auto p-3 md:p-6">
                 {/* Upload Card */}
-                <Card className="border-border bg-card/50 backdrop-blur-xl mb-8 overflow-hidden group hover:border-primary/30 transition-all duration-300">
-                  <CardHeader className="text-center pb-4">
+                <Card className="border-border bg-card/50 backdrop-blur-xl mb-6 md:mb-8 overflow-hidden group hover:border-primary/30 transition-all duration-300">
+                  <CardHeader className="text-center pb-3 md:pb-4 px-4 md:px-6">
                     <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center glow-primary">
-                        <Upload className="w-6 h-6 text-white" />
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center glow-primary">
+                        <Upload className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                     </div>
-                    <CardTitle className="text-3xl font-bold text-foreground mb-2 text-balance">
+                    <CardTitle className="text-xl md:text-3xl font-bold text-foreground mb-2 text-balance">
                       Upload Your Recording
                     </CardTitle>
-                    <p className="text-muted-foreground">Drag and drop your audio files or click to browse</p>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-muted-foreground text-sm md:text-base">
+                      Drag and drop your audio files or click to browse
+                    </p>
+                    <p className="hidden md:block text-sm text-muted-foreground mt-2">
                       Press <kbd className="px-2 py-1 text-xs bg-secondary rounded border border-border">⌘U</kbd> to
                       upload
                     </p>
                   </CardHeader>
 
-                  <CardContent className="p-8">
+                  <CardContent className="p-4 md:p-8">
                     <div
-                      className={`relative border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 ${
+                      className={`relative border-2 border-dashed rounded-2xl p-8 md:p-16 text-center transition-all duration-300 ${
                         isDragging
                           ? "border-primary bg-primary/5 scale-[1.02]"
                           : "border-border hover:border-primary/50 hover:bg-secondary/30"
@@ -689,28 +730,28 @@ export default function DashboardPage() {
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                     >
-                      <div className="flex flex-col items-center gap-6">
+                      <div className="flex flex-col items-center gap-4 md:gap-6">
                         <div
-                          className={`w-24 h-24 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                          className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                             isDragging ? "bg-primary scale-110 rotate-6" : "bg-gradient-to-br from-primary to-accent"
                           }`}
                         >
                           <Upload
-                            className={`w-12 h-12 text-white transition-transform duration-300 ${isDragging ? "scale-125" : ""}`}
+                            className={`w-8 h-8 md:w-12 md:h-12 text-white transition-transform duration-300 ${isDragging ? "scale-125" : ""}`}
                           />
                         </div>
 
                         <div>
-                          <h3 className="text-2xl font-bold text-foreground mb-2">
+                          <h3 className="text-lg md:text-2xl font-bold text-foreground mb-2">
                             {isDragging ? "✨ Drop your files here!" : "Upload Audio Recording"}
                           </h3>
-                          <p className="text-muted-foreground mb-6 text-lg">
+                          <p className="text-muted-foreground mb-4 md:mb-6 text-sm md:text-lg">
                             Support for MP3, WAV, M4A files up to 100MB
                           </p>
 
                           {isUploading && (
-                            <div className="mb-6">
-                              <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+                            <div className="mb-4 md:mb-6">
+                              <div className="w-full bg-secondary rounded-full h-2 md:h-3 overflow-hidden">
                                 <div
                                   className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 rounded-full"
                                   style={{ width: `${uploadProgress}%` }}
@@ -720,21 +761,21 @@ export default function DashboardPage() {
                             </div>
                           )}
 
-                          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
                             <Button
                               size="lg"
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 text-lg glow-primary transition-all duration-300 group"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 md:px-10 py-5 md:py-6 text-base md:text-lg glow-primary transition-all duration-300 group w-full sm:w-auto"
                               onClick={() => fileInputRef.current?.click()}
                             >
-                              <Upload className="w-5 h-5 mr-2 group-hover:-translate-y-1 transition-transform" />
+                              <Upload className="w-4 h-4 md:w-5 md:h-5 mr-2 group-hover:-translate-y-1 transition-transform" />
                               Choose Files
                             </Button>
                             <Button
                               variant="outline"
                               size="lg"
-                              className="border-2 border-border bg-secondary text-foreground hover:bg-secondary/80 hover:border-primary/50 px-10 py-6 text-lg group"
+                              className="border-2 border-border bg-secondary text-foreground hover:bg-secondary/80 hover:border-primary/50 px-8 md:px-10 py-5 md:py-6 text-base md:text-lg group w-full sm:w-auto"
                             >
-                              <Mic className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                              <Mic className="w-4 h-4 md:w-5 md:h-5 mr-2 group-hover:scale-110 transition-transform" />
                               Record Live
                             </Button>
                           </div>
@@ -754,12 +795,14 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* Course Selection */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Select Course (Optional)</h3>
-                  <div className="relative inline-block" ref={dropdownRef}>
+                <div className="mb-6 md:mb-8">
+                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">
+                    Select Course (Optional)
+                  </h3>
+                  <div className="relative inline-block w-full sm:w-auto" ref={dropdownRef}>
                     <Button
                       variant="outline"
-                      className="border-border bg-secondary text-foreground hover:bg-secondary/80"
+                      className="border-border bg-secondary text-foreground hover:bg-secondary/80 w-full sm:w-auto"
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     >
                       <BookOpen className="w-4 h-4 mr-2" />
@@ -770,7 +813,7 @@ export default function DashboardPage() {
                     </Button>
 
                     {isDropdownOpen && (
-                      <div className="absolute top-full mt-2 left-0 w-64 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
+                      <div className="absolute top-full mt-2 left-0 w-full sm:w-64 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
                         {courses.map((course) => (
                           <button
                             key={course.id}
@@ -793,38 +836,40 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-                  <div className="grid md:grid-cols-3 gap-6">
+                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">Quick Actions</h3>
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                     <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/10 group-hover:to-primary/5 transition-all duration-300"></div>
-                      <CardContent className="p-8 text-center relative z-10">
-                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 glow-primary">
-                          <Zap className="w-8 h-8 text-white" />
+                      <CardContent className="p-6 md:p-8 text-center relative z-10">
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300 glow-primary">
+                          <Zap className="w-6 h-6 md:w-8 md:h-8 text-white" />
                         </div>
-                        <h3 className="font-bold text-lg text-foreground mb-2">Quick Transcribe</h3>
-                        <p className="text-sm text-muted-foreground">Get instant transcriptions in seconds</p>
+                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">Quick Transcribe</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Get instant transcriptions in seconds
+                        </p>
                       </CardContent>
                     </Card>
 
                     <Card className="group hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative">
                       <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/10 group-hover:to-accent/5 transition-all duration-300"></div>
-                      <CardContent className="p-8 text-center relative z-10">
-                        <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 glow-accent">
-                          <Lightbulb className="w-8 h-8 text-white" />
+                      <CardContent className="p-6 md:p-8 text-center relative z-10">
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300 glow-accent">
+                          <Lightbulb className="w-6 h-6 md:w-8 md:h-8 text-white" />
                         </div>
-                        <h3 className="font-bold text-lg text-foreground mb-2">AI Summary</h3>
-                        <p className="text-sm text-muted-foreground">Get key points and summaries</p>
+                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">AI Summary</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">Get key points and summaries</p>
                       </CardContent>
                     </Card>
 
-                    <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative">
+                    <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative sm:col-span-2 md:col-span-1">
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-accent/0 group-hover:from-primary/10 group-hover:to-accent/5 transition-all duration-300"></div>
-                      <CardContent className="p-8 text-center relative z-10">
-                        <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300">
-                          <BookOpen className="w-8 h-8 text-white" />
+                      <CardContent className="p-6 md:p-8 text-center relative z-10">
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300">
+                          <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-white" />
                         </div>
-                        <h3 className="font-bold text-lg text-foreground mb-2">Study Notes</h3>
-                        <p className="text-sm text-muted-foreground">Generate organized study materials</p>
+                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">Study Notes</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">Generate organized study materials</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -836,11 +881,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Toast Notifications */}
-      <div className="fixed bottom-6 right-6 z-50 space-y-2">
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 space-y-2 max-w-[calc(100vw-2rem)] md:max-w-md">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-3 rounded-xl shadow-2xl backdrop-blur-xl border animate-slide-in-right ${
+            className={`px-3 py-2 md:px-4 md:py-3 rounded-xl shadow-2xl backdrop-blur-xl border animate-slide-in-right ${
               toast.type === "success"
                 ? "bg-green-500/10 border-green-500/30 text-green-500"
                 : toast.type === "error"
@@ -848,11 +893,11 @@ export default function DashboardPage() {
                   : "bg-primary/10 border-primary/30 text-primary"
             }`}
           >
-            <div className="flex items-center gap-3">
-              {toast.type === "success" && <Check className="w-5 h-5" />}
-              {toast.type === "error" && <X className="w-5 h-5" />}
-              {toast.type === "info" && <Sparkles className="w-5 h-5" />}
-              <span className="font-medium">{toast.message}</span>
+            <div className="flex items-center gap-2 md:gap-3">
+              {toast.type === "success" && <Check className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
+              {toast.type === "error" && <X className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
+              {toast.type === "info" && <Sparkles className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
+              <span className="font-medium text-sm md:text-base">{toast.message}</span>
             </div>
           </div>
         ))}
