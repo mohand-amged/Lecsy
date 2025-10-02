@@ -24,4 +24,6 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
-export default clientPromise;
+export const clientDb = clientPromise.then((client) =>
+  client.db("lecsy")
+);
