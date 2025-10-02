@@ -28,18 +28,31 @@ export function SignInTab() {
     })
 
     async function handleSignIn(data: SignInForm) {
-        await authClient.signIn.email(
-            { ...data, callbackURL: "/" }, 
-            {
-                onError: (error) => {
-                    toast.error(error.error.message || "Invalid email or password")
-                },
-                onSuccess: () => {
-                    toast.success("Signed in successfully!")
-                    router.push("/")
+        try {
+            await authClient.signIn.email(
+                { 
+                    email: data.email,
+                    password: data.password,
+                    callbackURL: "/dashboard" 
+                }, 
+                {
+                    onRequest: () => {
+                        console.log("Attempting sign in...");
+                    },
+                    onError: (ctx) => {
+                        console.error("Sign in error:", ctx.error);
+                        toast.error(ctx.error.message || "Invalid email or password")
+                    },
+                    onSuccess: () => {
+                        toast.success("Signed in successfully!")
+                        router.push("/dashboard")
+                    }
                 }
-            }
-        )
+            )
+        } catch (error) {
+            console.error("Unexpected error during sign in:", error);
+            toast.error("Failed to connect to the server. Please check your connection and try again.")
+        }
     }
 
     return <Form {...form}>
@@ -69,7 +82,6 @@ export function SignInTab() {
                             type="button"
                             className="text-xs text-primary hover:underline"
                             onClick={() => {
-                                // TODO: Implement forgot password
                                 toast.info("Forgot password feature coming soon!")
                             }}
                         >

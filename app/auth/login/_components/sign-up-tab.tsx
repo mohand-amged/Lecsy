@@ -34,112 +34,125 @@ export function SignUpTab() {
         }
     })
 
-async function handleSignUp(data: SignUpForm) {
-    await authClient.signUp.email(
-        {...data, callbackURL: "/" }, 
-        {
-            onError: (error) => {
-                toast.error(error.error.message || "Something went wrong")
-            },
-            onSuccess: () => {
-                toast.success("Account created successfully!")
-                router.push("/")
-            }
+    async function handleSignUp(data: SignUpForm) {
+        try {
+            await authClient.signUp.email(
+                {
+                    name: data.name,
+                    email: data.email,
+                    password: data.password,
+                    callbackURL: "/dashboard"
+                }, 
+                {
+                    onRequest: () => {
+                        console.log("Attempting sign up...");
+                    },
+                    onError: (ctx) => {
+                        console.error("Sign up error:", ctx.error);
+                        toast.error(ctx.error.message || "Something went wrong")
+                    },
+                    onSuccess: () => {
+                        toast.success("Account created successfully!")
+                        router.push("/dashboard")
+                    }
+                }
+            )
+        } catch (error) {
+            console.error("Unexpected error during sign up:", error);
+            toast.error("Failed to connect to the server. Please check your connection and try again.")
         }
-    )
-}
+    }
 
     return <Form {...form}>
-    <form className="space-y-5" onSubmit={form.handleSubmit(handleSignUp)}>
-        <FormField control={form.control}
-        name="name" render={({ field }) => (
-            <FormItem>
-                <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                <FormControl>
-                    <Input 
-                        placeholder="Enter your full name" 
-                        className="h-11"
-                        {...field} 
-                    />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )}/>
+        <form className="space-y-5" onSubmit={form.handleSubmit(handleSignUp)}>
+            <FormField control={form.control}
+            name="name" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                    <FormControl>
+                        <Input 
+                            placeholder="Enter your full name" 
+                            className="h-11"
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}/>
 
-        <FormField control={form.control}
-        name="email" render={({ field }) => (
-            <FormItem>
-                <FormLabel className="text-sm font-medium">Email</FormLabel>
-                <FormControl>
-                    <Input 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        className="h-11"
-                        {...field} 
-                    />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )}/>
+            <FormField control={form.control}
+            name="email" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-sm font-medium">Email</FormLabel>
+                    <FormControl>
+                        <Input 
+                            type="email" 
+                            placeholder="Enter your email" 
+                            className="h-11"
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}/>
 
-        <FormField control={form.control}
-        name="password" render={({ field }) => (
-            <FormItem>
-                <FormLabel className="text-sm font-medium">Password</FormLabel>
-                <FormControl>
-                    <PasswordInput 
-                        placeholder="Create a password" 
-                        className="h-11"
-                        {...field} 
-                    />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )}/>
+            <FormField control={form.control}
+            name="password" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-sm font-medium">Password</FormLabel>
+                    <FormControl>
+                        <PasswordInput 
+                            placeholder="Create a password" 
+                            className="h-11"
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}/>
 
-        <FormField control={form.control}
-        name="confirmPassword" render={({ field }) => (
-            <FormItem>
-                <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
-                <FormControl>
-                    <PasswordInput 
-                        placeholder="Confirm your password" 
-                        className="h-11"
-                        {...field} 
-                    />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )}/>
+            <FormField control={form.control}
+            name="confirmPassword" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
+                    <FormControl>
+                        <PasswordInput 
+                            placeholder="Confirm your password" 
+                            className="h-11"
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}/>
 
-        <div className="pt-2">
-            <Button 
-                type="submit" 
-                className="w-full h-11 text-sm font-medium" 
-                disabled={form.formState.isSubmitting}
-            >
-                {form.formState.isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Creating account...
-                    </div>
-                ) : (
-                    "Create Account"
-                )}
-            </Button>
-        </div>
+            <div className="pt-2">
+                <Button 
+                    type="submit" 
+                    className="w-full h-11 text-sm font-medium" 
+                    disabled={form.formState.isSubmitting}
+                >
+                    {form.formState.isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Creating account...
+                        </div>
+                    ) : (
+                        "Create Account"
+                    )}
+                </Button>
+            </div>
 
-        <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-4">
-            By creating an account, you agree to our{" "}
-            <button type="button" className="text-primary hover:underline">
-                Terms of Service
-            </button>{" "}
-            and{" "}
-            <button type="button" className="text-primary hover:underline">
-                Privacy Policy
-            </button>
-        </p>
-    </form>
-</Form>
-
+            <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-4">
+                By creating an account, you agree to our{" "}
+                <button type="button" className="text-primary hover:underline">
+                    Terms of Service
+                </button>{" "}
+                and{" "}
+                <button type="button" className="text-primary hover:underline">
+                    Privacy Policy
+                </button>
+            </p>
+        </form>
+    </Form>
 }
