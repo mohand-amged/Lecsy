@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
-import { clientDb } from "./db";
+import { getDatabase } from "./db";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 
 export const auth = betterAuth({
-    database: mongodbAdapter(clientDb),
+    database: mongodbAdapter(await getDatabase()),
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: false, // Set to true in production
