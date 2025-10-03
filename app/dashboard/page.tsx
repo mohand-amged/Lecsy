@@ -5,6 +5,25 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useRef, useEffect } from "react"
 import {
   Upload,
@@ -34,7 +53,11 @@ import {
   Clock,
   Calendar,
   Menu,
+  User,
+  Camera,
 } from "lucide-react"
+
+import { useSession, signOut } from "@/lib/auth-client"
 
 interface Toast {
   id: string
@@ -53,7 +76,16 @@ interface ChatMessage {
   keyPoints?: string[]
 }
 
+interface UserProfile {
+  name: string
+  email: string
+  bio: string
+  avatar: string
+}
+
 export default function DashboardPage() {
+  const { data: session, isPending } = useSession()
+
   const [selectedChat, setSelectedChat] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -67,9 +99,20 @@ export default function DashboardPage() {
   const [isWelcomeDismissed, setIsWelcomeDismissed] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
 
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
+
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: "Student",
+    email: "student@example.com",
+    bio: "Passionate learner using Lecsy to transcribe and organize my study materials.",
+    avatar: "",
+  })
+  const [editedProfile, setEditedProfile] = useState<UserProfile>(userProfile)
+
   const dropdownRef = useRef<HTMLDivElement>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const chatHistory: ChatMessage[] = [
     {
@@ -164,11 +207,19 @@ export default function DashboardPage() {
     },
   ]
 
-  const courses = [
-    { id: 1, name: "Computer Science 101", color: "bg-indigo-500" },
-    { id: 2, name: "Mathematics 201", color: "bg-purple-500" },
-    { id: 3, name: "Physics 301", color: "bg-blue-500" },
-  ]
+  useEffect(() => {
+    if (session?.user) {
+      const updatedProfile = {
+        name: session.user.name || "Student",
+        email: session.user.email || "student@example.com",
+        bio:
+        (session.user as { bio?: string }).bio || "Passionate learner using Lecsy to transcribe and organize my study materials.",
+        avatar: (session.user as { avatar?: string }).avatar || "",
+      }
+      setUserProfile(updatedProfile)
+      setEditedProfile(updatedProfile)
+    }
+  }, [session])
 
   const addToast = (message: string, type: Toast["type"] = "info") => {
     const id = Math.random().toString(36).substr(2, 9)
@@ -176,6 +227,62 @@ export default function DashboardPage() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, 3000)
+  }
+
+  const handleOpenProfileDialog = () => {
+    setEditedProfile(userProfile)
+    setIsProfileDialogOpen(true)
+    setIsProfileMenuOpen(false)
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch("/api/auth/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editedProfile.name,
+          email: editedProfile.email,
+          bio: editedProfile.bio,
+          avatar: editedProfile.avatar,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile")
+      }
+
+      setUserProfile(editedProfile)
+      setIsProfileDialogOpen(false)
+      addToast("Profile updated successfully", "success")
+    } catch (error) {
+      console.error("[v0] Error updating profile:", error)
+      addToast("Failed to update profile", "error")
+    }
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setEditedProfile({ ...editedProfile, avatar: reader.result as string })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      addToast("Logged out successfully", "success")
+      setIsProfileMenuOpen(false)
+    } catch (error) {
+      console.error("[v0] Error logging out:", error)
+      addToast("Failed to log out", "error")
+    }
   }
 
   useEffect(() => {
@@ -296,6 +403,15 @@ export default function DashboardPage() {
 
   const todaySessions = chatHistory.filter((chat) => chat.date.includes("hour") || chat.date === "Today").length
 
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   const SidebarContent = () => (
     <>
       {/* Sidebar Header */}
@@ -337,7 +453,7 @@ export default function DashboardPage() {
               }}
             >
               <CardContent className="p-3">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2 md:gap-3">
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       selectedChat === chat.id ? "bg-primary" : "bg-secondary"
@@ -384,6 +500,19 @@ export default function DashboardPage() {
     </>
   )
 
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-30"></div>
@@ -409,7 +538,7 @@ export default function DashboardPage() {
           <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center glow-primary">
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
           </div>
-          <h1 className="text-base md:text-lg font-bold text-foreground">AI Transcribe</h1>
+          <h1 className="text-base md:text-lg font-bold text-foreground">Lecsy</h1>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -430,48 +559,145 @@ export default function DashboardPage() {
             <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
           </Button>
 
-          <div className="relative" ref={profileMenuRef}>
-            <button
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-all duration-200 group"
-            >
-              <div className="w-6 h-6 md:w-7 md:h-7 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xs">S</span>
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-foreground">Student</span>
-              <ChevronDown
-                className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            {isProfileMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
-                <button
-                  className="w-full px-4 py-2.5 text-left hover:bg-secondary transition-colors flex items-center gap-3 group"
-                  onClick={() => {
-                    addToast("Settings opened", "info")
-                    setIsProfileMenuOpen(false)
-                  }}
-                >
-                  <Settings className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  <span className="text-foreground text-sm group-hover:text-primary transition-colors">Settings</span>
-                </button>
-
-                <button
-                  className="w-full px-4 py-2.5 text-left hover:bg-destructive/10 transition-colors flex items-center gap-3 group border-t border-border"
-                  onClick={() => {
-                    addToast("Logged out successfully", "success")
-                    setIsProfileMenuOpen(false)
-                  }}
-                >
-                  <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-                  <span className="text-foreground text-sm group-hover:text-destructive transition-colors">Logout</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <DropdownMenu open={isProfileMenuOpen} onOpenChange={setIsProfileMenuOpen}>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-all duration-200 group">
+                <Avatar className="w-6 h-6 md:w-7 md:h-7">
+                  <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt={userProfile.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-500 text-white text-xs font-bold">
+                    {getUserInitials(userProfile.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden sm:block text-sm font-medium text-foreground">{userProfile.name}</span>
+                <ChevronDown
+                  className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-card border-border">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium text-foreground">{userProfile.name}</p>
+                  <p className="text-xs text-muted-foreground">{userProfile.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuItem
+                onClick={handleOpenProfileDialog}
+                className="cursor-pointer text-foreground hover:bg-secondary focus:bg-secondary"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profile Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer text-foreground hover:bg-secondary focus:bg-secondary">
+                <Settings className="w-4 h-4 mr-2" />
+                Account Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground text-xl">Profile Settings</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update your profile information and avatar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center gap-4 md:gap-6">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={editedProfile.avatar || "/placeholder.svg"} alt={editedProfile.name} />
+                <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-500 text-white text-2xl font-bold">
+                  {getUserInitials(editedProfile.name)}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => avatarInputRef.current?.click()}
+                className="border-border hover:bg-secondary"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Change Avatar
+              </Button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+            </div>
+
+            {/* Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-foreground">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={editedProfile.name}
+                onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                className="bg-secondary border-border text-foreground"
+                placeholder="Enter your name"
+              />
+            </div>
+
+            {/* Email Field */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={editedProfile.email}
+                onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                className="bg-secondary border-border text-foreground"
+                placeholder="Enter your email"
+              />
+            </div>
+
+            {/* Bio Field */}
+            <div className="space-y-2">
+              <Label htmlFor="bio" className="text-foreground">
+                Bio
+              </Label>
+              <Textarea
+                id="bio"
+                value={editedProfile.bio}
+                onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                className="bg-secondary border-border text-foreground min-h-[100px] resize-none"
+                placeholder="Tell us about yourself"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsProfileDialogOpen(false)}
+              className="border-border hover:bg-secondary"
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex h-screen relative z-10 pt-14 md:pt-16">
         <div className="hidden md:flex w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col">
@@ -485,7 +711,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg md:text-2xl font-bold text-foreground mb-1 text-balance">
-                    Welcome back, Student! 👋
+                    Welcome back, {userProfile.name}! 👋
                   </h2>
                   <p className="text-muted-foreground text-xs md:text-sm">
                     Upload your recordings and get AI-powered transcriptions instantly
@@ -793,46 +1019,6 @@ export default function DashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Course Selection */}
-                <div className="mb-6 md:mb-8">
-                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">
-                    Select Course (Optional)
-                  </h3>
-                  <div className="relative inline-block w-full sm:w-auto" ref={dropdownRef}>
-                    <Button
-                      variant="outline"
-                      className="border-border bg-secondary text-foreground hover:bg-secondary/80 w-full sm:w-auto"
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Select Course
-                      <ChevronDown
-                        className={`w-4 h-4 ml-2 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                      />
-                    </Button>
-
-                    {isDropdownOpen && (
-                      <div className="absolute top-full mt-2 left-0 w-full sm:w-64 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
-                        {courses.map((course) => (
-                          <button
-                            key={course.id}
-                            className="w-full px-4 py-3 text-left hover:bg-secondary transition-colors flex items-center gap-3 group"
-                            onClick={() => {
-                              addToast(`Selected ${course.name}`, "success")
-                              setIsDropdownOpen(false)
-                            }}
-                          >
-                            <div className={`w-3 h-3 rounded-full ${course.color}`}></div>
-                            <span className="text-foreground text-sm group-hover:text-primary transition-colors">
-                              {course.name}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 {/* Quick Actions */}
                 <div>
