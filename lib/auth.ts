@@ -8,7 +8,7 @@ export const auth = betterAuth({
     database: mongodbAdapter(await getDatabaseForAuth()),
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: false, // Set to true in production
+        requireEmailVerification: process.env.NODE_ENV === "production",
     },
     session: {
         cookieCache: {
@@ -20,6 +20,7 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
         }
     },
     plugins: [nextCookies()],
@@ -29,7 +30,11 @@ export const auth = betterAuth({
           enabled: true,
         },
     },
-    trustedOrigins: ["http://localhost:3000", "https://lecsy.vercel.app"],
+    trustedOrigins: [
+        "http://localhost:3000", 
+        "https://lecsy.vercel.app",
+        ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : [])
+    ],
     secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET!,
     baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL,
 });

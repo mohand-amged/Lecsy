@@ -15,31 +15,10 @@ BETTER_AUTH_SECRET=your_secret_key_here
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
+# Production URL (for deployment)
+NEXT_PUBLIC_PRODUCTION_URL=https://your-domain.com
+
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-## Getting Started
-
-First, install dependencies:
-
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
-
-Then, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```

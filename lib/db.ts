@@ -38,7 +38,8 @@ export const getDatabase = async () => {
   return client.db("lecsy");
 };
 
-// For better-auth adapter - return the database promise directly
-export const getDatabaseForAuth = () => {
-  return clientPromise.then(client => client.db("lecsy"));
+// For better-auth adapter - return the database directly
+export const getDatabaseForAuth = async () => {
+  const client = await clientPromise;
+  return client.db("lecsy");
 };
