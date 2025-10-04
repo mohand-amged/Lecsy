@@ -1,7 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignUpTab } from "./_components/sign-up-tab";
 import { SignInTab } from "./_components/sign-in-tab";
+import { Separator } from "@/components/ui/separator";
+import SocialAuthButtons from "./_components/SocialAuthButtons";
 
 
 export default function LoginPage() {
@@ -33,6 +35,12 @@ export default function LoginPage() {
                             <CardContent className="pb-4 sm:pb-6 px-4 sm:px-6">
                                 <SignInTab />
                             </CardContent>
+
+                            <Separator />
+
+                            <CardFooter className="grid grid-cols-1 gap-2 sm:gap-3 mt-4 sm:mt-6 px-4 sm:px-6">
+                                <SocialAuthButtons />
+                            </CardFooter>
                         </Card>
                     </TabsContent>
 
@@ -46,6 +54,12 @@ export default function LoginPage() {
                             <CardContent className="pb-4 sm:pb-6 px-4 sm:px-6">
                                 <SignUpTab />
                             </CardContent>
+
+                            <Separator />
+
+                            <CardFooter className="grid grid-cols-1 gap-2 sm:gap-3 mt-4 sm:mt-6 px-4 sm:px-6">
+                                <SocialAuthButtons />
+                            </CardFooter>
                         </Card>
                     </TabsContent>
                 </Tabs>

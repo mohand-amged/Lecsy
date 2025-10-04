@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { getDatabaseForAuth } from "./db";
+import nextConfig from "@/next.config";
+import { nextCookies } from "better-auth/next-js";
 
 export const auth = betterAuth({
     database: mongodbAdapter(await getDatabaseForAuth()),
@@ -14,6 +16,13 @@ export const auth = betterAuth({
             maxAge: 60 * 60 * 24 * 30, // 30 days
         }
     },
+    socialProviders: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }
+    },
+    plugins: [nextCookies()],
     advanced: {
         useSecureCookies: process.env.NODE_ENV === "production",
         crossSubDomainCookies: {
