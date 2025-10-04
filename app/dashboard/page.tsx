@@ -1,79 +1,21 @@
 "use client"
 
-import type React from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useState, useRef, useEffect } from "react"
-import {
-  Upload,
-  Mic,
-  Zap,
-  Lightbulb,
-  BookOpen,
-  Plus,
-  Search,
-  Settings,
-  Bell,
-  X,
-  ChevronDown,
-  FileAudio,
-  Sparkles,
-  LogOut,
-  Download,
-  Share2,
-  Copy,
-  Check,
-  Trash2,
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  Clock,
-  Calendar,
-  Menu,
-  User,
-  Camera,
-} from "lucide-react"
+import { useState, useEffect } from "react"
+import { Sparkles } from "lucide-react"
 
 import { useSession, signOut } from "@/lib/auth-client"
+import { Navbar } from "@/components/dashboard/navbar"
+import { Sidebar } from "@/components/dashboard/sidebar"
+import { ProfileDialog } from "@/components/dashboard/profile-dialog"
+import { WelcomeBanner } from "@/components/dashboard/welcome-banner"
+import { UploadSection } from "@/components/dashboard/upload-section"
+import { QuickActions } from "@/components/dashboard/quick-actions"
+import { ToastNotification } from "@/components/dashboard/toast-notification"
 
 interface Toast {
   id: string
   message: string
   type: "success" | "error" | "info"
-}
-
-interface ChatMessage {
-  id: string
-  title: string
-  date: string
-  preview: string
-  duration?: string
-  transcript?: string
-  summary?: string
-  keyPoints?: string[]
 }
 
 interface UserProfile {
@@ -86,139 +28,59 @@ interface UserProfile {
 export default function DashboardPage() {
   const { data: session, isPending } = useSession()
 
-  const [selectedChat, setSelectedChat] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [toasts, setToasts] = useState<Toast[]>([])
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
   const [isWelcomeDismissed, setIsWelcomeDismissed] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Student",
     email: "student@example.com",
-    bio: "Passionate learner using Lecsy to transcribe and organize my study materials.",
+    bio: "",
     avatar: "",
   })
-  const [editedProfile, setEditedProfile] = useState<UserProfile>(userProfile)
-
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const profileMenuRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-
-  const chatHistory: ChatMessage[] = [
-    {
-      id: "1",
-      title: "Machine Learning Lecture 5",
-      date: "2 hours ago",
-      duration: "45:32",
-      preview: "Discussion about neural networks, backpropagation, and gradient descent algorithms...",
-      transcript:
-        "Today we're going to dive deep into neural networks and the backpropagation algorithm. Neural networks are computational models inspired by the human brain, consisting of interconnected nodes or neurons organized in layers...",
-      summary:
-        "This lecture covers the fundamentals of neural networks, including architecture, forward propagation, backpropagation algorithm, and gradient descent optimization techniques.",
-      keyPoints: [
-        "Neural network architecture and layer types",
-        "Forward propagation process",
-        "Backpropagation algorithm explained",
-        "Gradient descent and learning rate",
-        "Common activation functions",
-      ],
-    },
-    {
-      id: "2",
-      title: "Database Systems Notes",
-      date: "Yesterday",
-      duration: "38:15",
-      preview: "SQL queries, normalization, ACID properties, and transaction management concepts...",
-      transcript:
-        "Let's start with database normalization. Normalization is the process of organizing data in a database to reduce redundancy and improve data integrity...",
-      summary:
-        "Comprehensive overview of database systems including SQL fundamentals, normalization forms, ACID properties, and transaction management.",
-      keyPoints: [
-        "Database normalization (1NF, 2NF, 3NF)",
-        "SQL query optimization",
-        "ACID properties explained",
-        "Transaction isolation levels",
-        "Indexing strategies",
-      ],
-    },
-    {
-      id: "3",
-      title: "Physics Lab Recording",
-      date: "2 days ago",
-      duration: "52:08",
-      preview: "Experiment on electromagnetic induction, Faraday's law, and Lenz's law demonstration...",
-      transcript:
-        "In today's lab, we'll be exploring electromagnetic induction through hands-on experiments. We'll verify Faraday's law and observe Lenz's law in action...",
-      summary:
-        "Laboratory session demonstrating electromagnetic induction principles with practical experiments and real-world applications.",
-      keyPoints: [
-        "Faraday's law of electromagnetic induction",
-        "Lenz's law and energy conservation",
-        "Experimental setup and procedure",
-        "Data collection and analysis",
-        "Real-world applications",
-      ],
-    },
-    {
-      id: "4",
-      title: "Calculus Tutorial Session",
-      date: "3 days ago",
-      duration: "41:20",
-      preview: "Integration techniques, partial derivatives, and multivariable calculus problems...",
-      transcript:
-        "Welcome to our calculus tutorial. Today we're focusing on advanced integration techniques and their applications in multivariable calculus...",
-      summary:
-        "Tutorial covering advanced calculus topics including integration techniques, partial derivatives, and multivariable optimization.",
-      keyPoints: [
-        "Integration by parts",
-        "Partial derivatives and chain rule",
-        "Multivariable optimization",
-        "Lagrange multipliers",
-        "Double and triple integrals",
-      ],
-    },
-    {
-      id: "5",
-      title: "Software Engineering Meeting",
-      date: "1 week ago",
-      duration: "35:45",
-      preview: "Agile methodologies, sprint planning, and software development lifecycle discussion...",
-      transcript:
-        "Let's discuss our approach to agile development and how we can improve our sprint planning process...",
-      summary:
-        "Team meeting discussing agile methodologies, sprint planning strategies, and software development best practices.",
-      keyPoints: [
-        "Agile vs Waterfall methodologies",
-        "Sprint planning and estimation",
-        "Daily standup best practices",
-        "Code review processes",
-        "Continuous integration/deployment",
-      ],
-    },
-  ]
 
   useEffect(() => {
-    if (session?.user) {
-      const updatedProfile = {
-        name: session.user.name || "Student",
-        email: session.user.email || "student@example.com",
-        bio:
-        (session.user as { bio?: string }).bio || "Passionate learner using Lecsy to transcribe and organize my study materials.",
-        avatar: (session.user as { avatar?: string }).avatar || "",
+    const fetchUserProfile = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch("/api/auth/profile")
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.user) {
+              setUserProfile({
+                name: data.user.name || session.user.name || "Student",
+                email: data.user.email || session.user.email || "",
+                bio: data.user.bio || "",
+                avatar: data.user.avatar || "",
+              })
+            }
+          } else {
+            setUserProfile({
+              name: session.user.name || "Student",
+              email: session.user.email || "",
+              bio: "",
+              avatar: "",
+            })
+          }
+        } catch (error) {
+          console.error("[v0] Error fetching profile:", error)
+          setUserProfile({
+            name: session.user.name || "Student",
+            email: session.user.email || "",
+            bio: "",
+            avatar: "",
+          })
+        }
       }
-      setUserProfile(updatedProfile)
-      setEditedProfile(updatedProfile)
     }
+
+    fetchUserProfile()
   }, [session])
 
   const addToast = (message: string, type: Toast["type"] = "info") => {
@@ -230,13 +92,14 @@ export default function DashboardPage() {
   }
 
   const handleOpenProfileDialog = () => {
-    setEditedProfile(userProfile)
     setIsProfileDialogOpen(true)
     setIsProfileMenuOpen(false)
   }
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (editedProfile: UserProfile) => {
     try {
+      console.log("[v0] Saving profile:", editedProfile)
+
       const response = await fetch("/api/auth/update", {
         method: "POST",
         headers: {
@@ -250,27 +113,25 @@ export default function DashboardPage() {
         }),
       })
 
+      console.log("[v0] Response status:", response.status)
+
+      const data = await response.json()
+      console.log("[v0] Response data:", data)
+
       if (!response.ok) {
-        throw new Error("Failed to update profile")
+        throw new Error(data.error || data.details || "Failed to update profile")
       }
 
-      setUserProfile(editedProfile)
-      setIsProfileDialogOpen(false)
-      addToast("Profile updated successfully", "success")
+      if (data.success) {
+        setUserProfile(editedProfile)
+        addToast("Profile updated successfully", "success")
+      } else {
+        throw new Error("Update failed")
+      }
     } catch (error) {
       console.error("[v0] Error updating profile:", error)
-      addToast("Failed to update profile", "error")
-    }
-  }
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setEditedProfile({ ...editedProfile, avatar: reader.result as string })
-      }
-      reader.readAsDataURL(file)
+      addToast(error instanceof Error ? error.message : "Failed to update profile", "error")
+      throw error
     }
   }
 
@@ -285,20 +146,37 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
+  const handleNewChat = async () => {
+    try {
+      addToast("Creating new transcription session...", "info")
+
+      const response = await fetch("/api/transcriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: `Transcription ${new Date().toLocaleDateString()}`,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create new session")
       }
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
-        setIsProfileMenuOpen(false)
+
+      const data = await response.json()
+
+      if (data.success) {
+        addToast("New transcription session created!", "success")
+        // Reset upload state for new session
+        setUploadProgress(0)
+        setIsUploading(false)
       }
+    } catch (error) {
+      console.error("[v0] Error creating new chat:", error)
+      addToast("Failed to create new session", "error")
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+  }
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -306,13 +184,7 @@ export default function DashboardPage() {
         if (e.key === "k") {
           e.preventDefault()
           document.getElementById("search-input")?.focus()
-        } else if (e.key === "u") {
-          e.preventDefault()
-          fileInputRef.current?.click()
         }
-      }
-      if (e.key === "Escape") {
-        setSelectedChat(null)
       }
     }
     window.addEventListener("keydown", handleKeyPress)
@@ -332,33 +204,9 @@ export default function DashboardPage() {
     addToast("Welcome message hidden", "info")
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const files = Array.from(e.dataTransfer.files)
-    handleFiles(files)
-  }
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files)
-      handleFiles(files)
-    }
-  }
-
   const handleFiles = (files: File[]) => {
     const validTypes = ["audio/mpeg", "audio/wav", "audio/mp4", "audio/x-m4a"]
-    const maxSize = 100 * 1024 * 1024 // 100MB
+    const maxSize = 100 * 1024 * 1024
 
     const invalidFiles = files.filter((file) => !validTypes.includes(file.type) || file.size > maxSize)
 
@@ -386,23 +234,6 @@ export default function DashboardPage() {
     }, 200)
   }
 
-  const handleCopyTranscript = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId("transcript")
-    addToast("Transcript copied to clipboard", "success")
-    setTimeout(() => setCopiedId(null), 2000)
-  }
-
-  const filteredChats = chatHistory.filter(
-    (chat) =>
-      chat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.preview.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
-
-  const selectedChatData = chatHistory.find((chat) => chat.id === selectedChat)
-
-  const todaySessions = chatHistory.filter((chat) => chat.date.includes("hour") || chat.date === "Today").length
-
   const getUserInitials = (name: string) => {
     return name
       .split(" ")
@@ -412,93 +243,7 @@ export default function DashboardPage() {
       .slice(0, 2)
   }
 
-  const SidebarContent = () => (
-    <>
-      {/* Sidebar Header */}
-      <div className="p-3 md:p-4 border-b border-border space-y-3">
-        <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg glow-primary transition-all duration-300 group h-9 md:h-10">
-          <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-          New Chat
-        </Button>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            id="search-input"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-12 h-9 bg-secondary border-border text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:ring-primary/20"
-          />
-          <kbd className="hidden md:block absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs text-muted-foreground bg-muted rounded border border-border">
-            ⌘K
-          </kbd>
-        </div>
-      </div>
-
-      {/* Chat History */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-custom">
-        {filteredChats.length > 0 ? (
-          filteredChats.map((chat) => (
-            <Card
-              key={chat.id}
-              className={`cursor-pointer transition-all duration-200 border group ${
-                selectedChat === chat.id
-                  ? "bg-primary/10 border-primary/30 shadow-lg"
-                  : "bg-card/50 border-border hover:bg-card hover:border-border/50"
-              }`}
-              onClick={() => {
-                setSelectedChat(chat.id)
-                setIsMobileSidebarOpen(false)
-              }}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-start gap-2 md:gap-3">
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      selectedChat === chat.id ? "bg-primary" : "bg-secondary"
-                    }`}
-                  >
-                    <FileAudio className="w-4 h-4 text-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground truncate">{chat.title}</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <p className="text-xs text-muted-foreground">{chat.date}</p>
-                      {chat.duration && (
-                        <>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {chat.duration}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{chat.preview}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : searchQuery ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <Search className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="text-sm font-semibold text-foreground mb-2">No results found</h3>
-            <p className="text-xs text-muted-foreground px-4">Try adjusting your search terms</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center mb-4">
-              <FileAudio className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground mb-2">No transcriptions yet</h3>
-            <p className="text-xs text-muted-foreground mb-4 px-4">Upload your first recording to get started</p>
-          </div>
-        )}
-      </div>
-    </>
-  )
+  const sidebarContent = <Sidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery} onNewChat={handleNewChat} />
 
   if (isPending) {
     return (
@@ -519,575 +264,47 @@ export default function DashboardPage() {
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl"></div>
 
-      {/* Navbar */}
-      <div className="fixed top-0 left-0 right-0 h-14 md:h-16 bg-card/50 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-3 md:px-6">
-        <div className="flex items-center gap-2 md:gap-3">
-          <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] p-0 bg-card/95 backdrop-blur-xl">
-              <div className="flex flex-col h-full">
-                <SidebarContent />
-              </div>
-            </SheetContent>
-          </Sheet>
+      <Navbar
+        userProfile={userProfile}
+        todaySessions={0}
+        isProfileMenuOpen={isProfileMenuOpen}
+        setIsProfileMenuOpen={setIsProfileMenuOpen}
+        onOpenProfileDialog={handleOpenProfileDialog}
+        onLogout={handleLogout}
+        getUserInitials={getUserInitials}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        sidebarContent={sidebarContent}
+        isNotificationMenuOpen={isNotificationMenuOpen}
+        setIsNotificationMenuOpen={setIsNotificationMenuOpen}
+      />
 
-          <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center glow-primary">
-            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
-          </div>
-          <h1 className="text-base md:text-lg font-bold text-foreground">Lecsy</h1>
-        </div>
-
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-2 md:px-3 py-1.5 bg-secondary/50 rounded-lg border border-border">
-            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground leading-none">Today</span>
-              <span className="text-xs md:text-sm font-bold text-foreground leading-none mt-0.5">{todaySessions}</span>
-            </div>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary relative h-8 w-8 md:h-9 md:w-9"
-          >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
-          </Button>
-
-          <DropdownMenu open={isProfileMenuOpen} onOpenChange={setIsProfileMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 bg-secondary rounded-lg hover:bg-secondary/80 transition-all duration-200 group">
-                <Avatar className="w-6 h-6 md:w-7 md:h-7">
-                  <AvatarImage src={userProfile.avatar || "/placeholder.svg"} alt={userProfile.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-500 text-white text-xs font-bold">
-                    {getUserInitials(userProfile.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden sm:block text-sm font-medium text-foreground">{userProfile.name}</span>
-                <ChevronDown
-                  className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-card border-border">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium text-foreground">{userProfile.name}</p>
-                  <p className="text-xs text-muted-foreground">{userProfile.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem
-                onClick={handleOpenProfileDialog}
-                className="cursor-pointer text-foreground hover:bg-secondary focus:bg-secondary"
-              >
-                <User className="w-4 h-4 mr-2" />
-                Profile Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer text-foreground hover:bg-secondary focus:bg-secondary">
-                <Settings className="w-4 h-4 mr-2" />
-                Account Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="cursor-pointer text-destructive hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground text-xl">Profile Settings</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Update your profile information and avatar
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Avatar Upload */}
-            <div className="flex flex-col items-center gap-4 md:gap-6">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={editedProfile.avatar || "/placeholder.svg"} alt={editedProfile.name} />
-                <AvatarFallback className="bg-gradient-to-br from-green-500 to-emerald-500 text-white text-2xl font-bold">
-                  {getUserInitials(editedProfile.name)}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => avatarInputRef.current?.click()}
-                className="border-border hover:bg-secondary"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Change Avatar
-              </Button>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarChange}
-              />
-            </div>
-
-            {/* Name Field */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={editedProfile.name}
-                onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                className="bg-secondary border-border text-foreground"
-                placeholder="Enter your name"
-              />
-            </div>
-
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={editedProfile.email}
-                onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
-                className="bg-secondary border-border text-foreground"
-                placeholder="Enter your email"
-              />
-            </div>
-
-            {/* Bio Field */}
-            <div className="space-y-2">
-              <Label htmlFor="bio" className="text-foreground">
-                Bio
-              </Label>
-              <Textarea
-                id="bio"
-                value={editedProfile.bio}
-                onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
-                className="bg-secondary border-border text-foreground min-h-[100px] resize-none"
-                placeholder="Tell us about yourself"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsProfileDialogOpen(false)}
-              className="border-border hover:bg-secondary"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveProfile} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ProfileDialog
+        isOpen={isProfileDialogOpen}
+        onClose={() => setIsProfileDialogOpen(false)}
+        userProfile={userProfile}
+        onSave={handleSaveProfile}
+        getUserInitials={getUserInitials}
+      />
 
       <div className="flex h-screen relative z-10 pt-14 md:pt-16">
         <div className="hidden md:flex w-64 bg-card/50 backdrop-blur-xl border-r border-border flex-col">
-          <SidebarContent />
+          {sidebarContent}
         </div>
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {!isWelcomeDismissed && (
-            <div className="bg-card/30 backdrop-blur-xl border-b border-border px-3 md:px-6 py-3 md:py-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg md:text-2xl font-bold text-foreground mb-1 text-balance">
-                    Welcome back, {userProfile.name}! 👋
-                  </h2>
-                  <p className="text-muted-foreground text-xs md:text-sm">
-                    Upload your recordings and get AI-powered transcriptions instantly
-                  </p>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleDismissWelcome}
-                  className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8 flex-shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          {!isWelcomeDismissed && <WelcomeBanner userName={userProfile.name} onDismiss={handleDismissWelcome} />}
 
           <div className="flex-1 overflow-y-auto scrollbar-custom">
-            {selectedChatData ? (
-              // Chat Detail View
-              <div className="max-w-5xl mx-auto p-3 md:p-6 animate-fade-in">
-                {/* Chat Header */}
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedChat(null)}
-                        className="text-muted-foreground hover:text-foreground h-8 md:h-9"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Close
-                      </Button>
-                      <span className="hidden md:inline text-muted-foreground">•</span>
-                      <span className="hidden md:inline text-sm text-muted-foreground">Press ESC to close</span>
-                    </div>
-                    <h2 className="text-xl md:text-3xl font-bold text-foreground mb-2 text-balance">
-                      {selectedChatData.title}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                        {selectedChatData.date}
-                      </span>
-                      {selectedChatData.duration && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                          {selectedChatData.duration}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyTranscript(selectedChatData.transcript || "")}
-                      className="border-border hover:bg-secondary flex-1 sm:flex-none"
-                    >
-                      {copiedId === "transcript" ? (
-                        <Check className="w-4 h-4 sm:mr-2 text-green-500" />
-                      ) : (
-                        <Copy className="w-4 h-4 sm:mr-2" />
-                      )}
-                      <span className="hidden sm:inline">Copy</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-border hover:bg-secondary bg-transparent flex-1 sm:flex-none"
-                      onClick={() => addToast("Download started", "success")}
-                    >
-                      <Download className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Export</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-border hover:bg-secondary bg-transparent flex-1 sm:flex-none"
-                      onClick={() => addToast("Share link copied", "success")}
-                    >
-                      <Share2 className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Share</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-border hover:bg-destructive/10 hover:text-destructive bg-transparent"
-                      onClick={() => {
-                        addToast("Transcription deleted", "success")
-                        setSelectedChat(null)
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Audio Player */}
-                <Card className="border-border bg-card/50 mb-6">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <Button
-                        size="icon"
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary hover:bg-primary/90 glow-primary flex-shrink-0"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                        ) : (
-                          <Play className="w-5 h-5 md:w-6 md:h-6 text-white ml-0.5" />
-                        )}
-                      </Button>
-
-                      <div className="flex-1 w-full">
-                        <div className="w-full bg-secondary rounded-full h-2 mb-2">
-                          <div className="h-full bg-primary rounded-full w-1/3"></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>15:24</span>
-                          <span>{selectedChatData.duration}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground h-9 w-9"
-                        >
-                          <SkipBack className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground h-9 w-9"
-                        >
-                          <SkipForward className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground h-9 w-9"
-                        >
-                          <Volume2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Summary Section */}
-                {selectedChatData.summary && (
-                  <Card className="border-border bg-gradient-to-br from-primary/5 to-accent/5 mb-6">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
-                        <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                        AI Summary
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-foreground leading-relaxed text-sm md:text-base">{selectedChatData.summary}</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Key Points */}
-                {selectedChatData.keyPoints && (
-                  <Card className="border-border bg-card/50 mb-6">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
-                        <Lightbulb className="w-4 h-4 md:w-5 md:h-5 text-accent" />
-                        Key Points
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 md:space-y-3">
-                        {selectedChatData.keyPoints.map((point, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <span className="text-xs font-bold text-primary">{index + 1}</span>
-                            </div>
-                            <span className="text-foreground leading-relaxed text-sm md:text-base">{point}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Full Transcript */}
-                <Card className="border-border bg-card/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-foreground text-base md:text-lg">
-                      <FileAudio className="w-4 h-4 md:w-5 md:h-5" />
-                      Full Transcript
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="text-foreground leading-relaxed whitespace-pre-wrap text-sm md:text-base">
-                        {selectedChatData.transcript}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              // Upload Section
-              <div className="max-w-5xl mx-auto p-3 md:p-6">
-                {/* Upload Card */}
-                <Card className="border-border bg-card/50 backdrop-blur-xl mb-6 md:mb-8 overflow-hidden group hover:border-primary/30 transition-all duration-300">
-                  <CardHeader className="text-center pb-3 md:pb-4 px-4 md:px-6">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center glow-primary">
-                        <Upload className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                      </div>
-                    </div>
-                    <CardTitle className="text-xl md:text-3xl font-bold text-foreground mb-2 text-balance">
-                      Upload Your Recording
-                    </CardTitle>
-                    <p className="text-muted-foreground text-sm md:text-base">
-                      Drag and drop your audio files or click to browse
-                    </p>
-                    <p className="hidden md:block text-sm text-muted-foreground mt-2">
-                      Press <kbd className="px-2 py-1 text-xs bg-secondary rounded border border-border">⌘U</kbd> to
-                      upload
-                    </p>
-                  </CardHeader>
-
-                  <CardContent className="p-4 md:p-8">
-                    <div
-                      className={`relative border-2 border-dashed rounded-2xl p-8 md:p-16 text-center transition-all duration-300 ${
-                        isDragging
-                          ? "border-primary bg-primary/5 scale-[1.02]"
-                          : "border-border hover:border-primary/50 hover:bg-secondary/30"
-                      }`}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      <div className="flex flex-col items-center gap-4 md:gap-6">
-                        <div
-                          className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                            isDragging ? "bg-primary scale-110 rotate-6" : "bg-gradient-to-br from-primary to-accent"
-                          }`}
-                        >
-                          <Upload
-                            className={`w-8 h-8 md:w-12 md:h-12 text-white transition-transform duration-300 ${isDragging ? "scale-125" : ""}`}
-                          />
-                        </div>
-
-                        <div>
-                          <h3 className="text-lg md:text-2xl font-bold text-foreground mb-2">
-                            {isDragging ? "✨ Drop your files here!" : "Upload Audio Recording"}
-                          </h3>
-                          <p className="text-muted-foreground mb-4 md:mb-6 text-sm md:text-lg">
-                            Support for MP3, WAV, M4A files up to 100MB
-                          </p>
-
-                          {isUploading && (
-                            <div className="mb-4 md:mb-6">
-                              <div className="w-full bg-secondary rounded-full h-2 md:h-3 overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300 rounded-full"
-                                  style={{ width: `${uploadProgress}%` }}
-                                ></div>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-2">Uploading... {uploadProgress}%</p>
-                            </div>
-                          )}
-
-                          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-                            <Button
-                              size="lg"
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 md:px-10 py-5 md:py-6 text-base md:text-lg glow-primary transition-all duration-300 group w-full sm:w-auto"
-                              onClick={() => fileInputRef.current?.click()}
-                            >
-                              <Upload className="w-4 h-4 md:w-5 md:h-5 mr-2 group-hover:-translate-y-1 transition-transform" />
-                              Choose Files
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="lg"
-                              className="border-2 border-border bg-secondary text-foreground hover:bg-secondary/80 hover:border-primary/50 px-8 md:px-10 py-5 md:py-6 text-base md:text-lg group w-full sm:w-auto"
-                            >
-                              <Mic className="w-4 h-4 md:w-5 md:h-5 mr-2 group-hover:scale-110 transition-transform" />
-                              Record Live
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="audio/*"
-                        multiple
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={handleFileSelect}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Actions */}
-                <div>
-                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-3 md:mb-4">Quick Actions</h3>
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                    <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/10 group-hover:to-primary/5 transition-all duration-300"></div>
-                      <CardContent className="p-6 md:p-8 text-center relative z-10">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300 glow-primary">
-                          <Zap className="w-6 h-6 md:w-8 md:h-8 text-white" />
-                        </div>
-                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">Quick Transcribe</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          Get instant transcriptions in seconds
-                        </p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="group hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/10 group-hover:to-accent/5 transition-all duration-300"></div>
-                      <CardContent className="p-6 md:p-8 text-center relative z-10">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300 glow-accent">
-                          <Lightbulb className="w-6 h-6 md:w-8 md:h-8 text-white" />
-                        </div>
-                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">AI Summary</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground">Get key points and summaries</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 transform hover:-translate-y-1 border-border bg-card/50 backdrop-blur-sm overflow-hidden relative sm:col-span-2 md:col-span-1">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-accent/0 group-hover:from-primary/10 group-hover:to-accent/5 transition-all duration-300"></div>
-                      <CardContent className="p-6 md:p-8 text-center relative z-10">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 group-hover:scale-110 transition-all duration-300">
-                          <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-white" />
-                        </div>
-                        <h3 className="font-bold text-base md:text-lg text-foreground mb-2">Study Notes</h3>
-                        <p className="text-xs md:text-sm text-muted-foreground">Generate organized study materials</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="max-w-5xl mx-auto p-3 md:p-6">
+              <UploadSection onUpload={handleFiles} isUploading={isUploading} uploadProgress={uploadProgress} />
+              <QuickActions />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Toast Notifications */}
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 space-y-2 max-w-[calc(100vw-2rem)] md:max-w-md">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`px-3 py-2 md:px-4 md:py-3 rounded-xl shadow-2xl backdrop-blur-xl border animate-slide-in-right ${
-              toast.type === "success"
-                ? "bg-green-500/10 border-green-500/30 text-green-500"
-                : toast.type === "error"
-                  ? "bg-destructive/10 border-destructive/30 text-destructive"
-                  : "bg-primary/10 border-primary/30 text-primary"
-            }`}
-          >
-            <div className="flex items-center gap-2 md:gap-3">
-              {toast.type === "success" && <Check className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
-              {toast.type === "error" && <X className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
-              {toast.type === "info" && <Sparkles className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />}
-              <span className="font-medium text-sm md:text-base">{toast.message}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ToastNotification toasts={toasts} />
     </div>
   )
 }
