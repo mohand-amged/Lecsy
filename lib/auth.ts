@@ -29,6 +29,7 @@ export const auth = betterAuth({
           enabled: true,
         },
     },
+    trustedOrigins: ["http://localhost:3000", "https://lecsy.vercel.app"],
     secret: process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET!,
-    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL || "http://localhost:3001",
+    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXTAUTH_URL,
 });
