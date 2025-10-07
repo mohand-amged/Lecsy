@@ -8,9 +8,47 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(auto()) @map("_id") @db.ObjectId
-  email         String         @unique
-  name          String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  email           String           @unique
+  name            String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  transcriptions  Transcription[]
+  usageStats      UsageStats?
+}
+
+model Transcription {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @db.ObjectId
+  fileName          String
+  fileSize          Int
+  fileDuration      Float?
+  language          String
+  transcript        String?   @db.String
+  jobId             String    @unique
+  status            String    // 'pending', 'processing', 'completed', 'failed'
+  estimatedCost     Float?
+  retryCount        Int       @default(0)
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model UsageStats {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String    @unique @db.ObjectId
+  totalTranscriptions   Int       @default(0)
+  totalMinutesProcessed Float     @default(0)
+  totalCost             Float     @default(0)
+  monthlyTranscriptions Int       @default(0)
+  monthlyMinutes        Float     @default(0)
+  monthlyCost           Float     @default(0)
+  lastResetDate         DateTime  @default(now())
+  maxMonthlyMinutes     Float     @default(60)
+  maxMonthlyCost        Float     @default(10)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -544,7 +544,7 @@ Update your API route with better error messages:
 
 ```typescript
 // Add to your API route
-const ERROR_MESSAGES: { [key: number]: string } = {
+const ERROR_MESSAGES: {[key: number]: string } = {
   400: 'Invalid request. Please check your audio file format.',
   401: 'Authentication failed. Please check your API key.',
   413: 'File too large. Please use a smaller audio file.',
