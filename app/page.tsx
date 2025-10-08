@@ -1,224 +1,183 @@
-"use client";
+"use client"
 
-import React, { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Play, Star, Users, Zap, Shield } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthContext";
-import NavBar from "@/components/NavBar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type React from "react"
 
-export default function LandingPage() {
-  const router = useRouter();
-  const { user, loading } = useAuth();
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-  // Redirect to dashboard if user is authenticated
+export default function HomePage() {
+  const router = useRouter()
+  const { user, loading, signIn, signUp } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      router.push("/dashboard")
     }
-  }, [user, loading, router]);
+  }, [user, loading, router])
+
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    const result = await signIn(email, password)
+
+    if (result.success) {
+      router.push("/dashboard")
+    } else {
+      setError(result.error || "Sign in failed")
+    }
+
+    setIsLoading(false)
+  }
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    const result = await signUp(name, email, password)
+
+    if (result.success) {
+      router.push("/dashboard")
+    } else {
+      setError(result.error || "Sign up failed")
+    }
+
+    setIsLoading(false)
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center mx-auto animate-pulse">
+            <span className="text-2xl font-bold text-primary-foreground">L</span>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-muted rounded animate-pulse mx-auto"></div>
+            <div className="h-3 w-24 bg-muted/60 rounded animate-pulse mx-auto"></div>
+          </div>
+        </div>
       </div>
-    );
+    )
   }
 
-  const features = [
-    {
-      icon: <Zap className="h-6 w-6" />,
-      title: "AI-Powered Transcription",
-      description: "Advanced AI algorithms ensure high accuracy in converting your audio to text."
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Multi-Speaker Recognition",
-      description: "Automatically identifies and separates different speakers in your recordings."
-    },
-    {
-      icon: <Shield className="h-6 w-6" />,
-      title: "Secure & Private",
-      description: "Your audio files are processed securely and never stored permanently."
-    }
-  ];
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+          <div
+            className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-primary/3 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          />
+        </div>
 
-  const testimonials = [
-    {
-      name: "Dr. Sarah Johnson",
-      role: "University Professor",
-      content: "Lecsy has revolutionized how I create lecture notes. The accuracy is incredible!",
-      rating: 5
-    },
-    {
-      name: "Mike Chen",
-      role: "Student",
-      content: "Perfect for converting recorded lectures to text. Saves me hours every week.",
-      rating: 5
-    },
-    {
-      name: "Prof. Robert Miller",
-      role: "Education Director",
-      content: "The multi-speaker recognition is a game-changer for our discussion-based classes.",
-      rating: 5
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-background">
-      <NavBar user={user} />
-      
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-muted/20 py-20 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-              Transform Your{" "}
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Audio to Text
-              </span>{" "}
-              with AI
+        <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="text-center space-y-2">
+            <div className="h-16 w-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl font-bold text-primary-foreground">L</span>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Welcome to Lecsy
             </h1>
-            <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Lecsy AI-Powered Transcript makes it easy to convert your lecture recordings, 
-              meetings, and conversations into accurate, searchable text with advanced AI technology.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link href="/sign-up">
-                <Button size="lg" className="h-12 px-8">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Button variant="outline" size="lg" className="h-12 px-8">
-                <Play className="mr-2 h-4 w-4" />
-                Watch Demo
-              </Button>
-            </div>
+            <p className="text-muted-foreground text-lg">Transform your lectures into searchable transcripts</p>
           </div>
-        </div>
-        
-        {/* Background decoration */}
-        <div className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">
-          <div className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-primary to-secondary opacity-20 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]" />
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Why Choose Lecsy AI?
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Powerful features designed to make transcription effortless and accurate.
-            </p>
-          </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <div className="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
-              {features.map((feature, index) => (
-                <Card key={index} className="border-border/40 bg-card/50 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      {feature.icon}
-                    </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
-      {/* Testimonials Section */}
-      <section className="bg-muted/30 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Trusted by Educators & Students
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              See what our users are saying about Lecsy AI.
-            </p>
-          </div>
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-border/40 bg-card/50 backdrop-blur-sm">
+            <TabsContent value="signin">
+              <Card>
                 <CardHeader>
-                  <div className="flex items-center gap-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
+                  <CardTitle>Sign In</CardTitle>
+                  <CardDescription>Enter your credentials to access your account</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <blockquote className="text-sm leading-6 text-muted-foreground">
-                    &ldquo;{testimonial.content}&rdquo;
-                  </blockquote>
-                  <div className="mt-6">
-                    <div className="font-semibold text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                  </div>
-                </CardContent>
+                <form onSubmit={handleSignIn}>
+                  <CardContent className="space-y-4">
+                    {error && (
+                      <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                        {error}
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email">Email</Label>
+                      <Input id="signin-email" name="email" type="email" placeholder="you@example.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password">Password</Label>
+                      <Input id="signin-password" name="password" type="password" required />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Signing in..." : "Sign In"}
+                    </Button>
+                  </CardFooter>
+                </form>
               </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+            </TabsContent>
 
-      {/* CTA Section */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Ready to Transform Your Audio?
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Join thousands of users who trust Lecsy AI for their transcription needs.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link href="/sign-up">
-                <Button size="lg" className="h-12 px-8">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/sign-in">
-                <Button variant="ghost" size="lg" className="h-12 px-8">
-                  Already have an account? Sign in
-                </Button>
-              </Link>
-            </div>
-          </div>
+            <TabsContent value="signup">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create Account</CardTitle>
+                  <CardDescription>Sign up to start transcribing your lectures</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleSignUp}>
+                  <CardContent className="space-y-4">
+                    {error && (
+                      <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+                        {error}
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Name</Label>
+                      <Input id="signup-name" name="name" type="text" placeholder="John Doe" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input id="signup-email" name="email" type="email" placeholder="you@example.com" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input id="signup-password" name="password" type="password" required />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Creating account..." : "Sign Up"}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-      </section>
+      </div>
+    )
+  }
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-background">
-        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-foreground">L</span>
-              </div>
-              <span className="text-xl font-bold text-foreground">Lecsy AI</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2024 Lecsy AI. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+  return null
 }

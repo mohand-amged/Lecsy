@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import FormData from 'form-data';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 interface SpeechmaticsResponse {
   id: string;

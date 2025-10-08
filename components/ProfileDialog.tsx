@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 interface UserProfile {
   id: string
@@ -32,30 +32,24 @@ interface ProfileDialogProps {
   onSave: (updatedUser: Partial<UserProfile>) => Promise<void>
 }
 
-export default function ProfileDialog({ 
-  isOpen, 
-  onClose, 
-  user, 
-  onSave 
-}: ProfileDialogProps) {
+export default function ProfileDialog({ isOpen, onClose, user, onSave }: ProfileDialogProps) {
   const [formData, setFormData] = React.useState({
     name: user.name,
     email: user.email,
     bio: user.bio || "",
-    image: user.image || ""
+    image: user.image || "",
   })
   const [isLoading, setIsLoading] = React.useState(false)
   const [errors, setErrors] = React.useState<Record<string, string>>({})
-  const { addToast } = useToast()
+  const toast = useToast()
 
-  // Reset form when user changes or dialog opens
   React.useEffect(() => {
     if (isOpen) {
       setFormData({
         name: user.name,
         email: user.email,
         bio: user.bio || "",
-        image: user.image || ""
+        image: user.image || "",
       })
       setErrors({})
     }
@@ -98,10 +92,9 @@ export default function ProfileDialog({
   }
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }))
+      setErrors((prev) => ({ ...prev, [field]: "" }))
     }
   }
 
@@ -112,7 +105,6 @@ export default function ProfileDialog({
 
     setIsLoading(true)
     try {
-      // Only send changed fields
       const changes: Partial<UserProfile> = {}
       if (formData.name !== user.name) changes.name = formData.name.trim()
       if (formData.email !== user.email) changes.email = formData.email.trim()
@@ -120,19 +112,19 @@ export default function ProfileDialog({
       if (formData.image !== (user.image || "")) changes.image = formData.image.trim()
 
       await onSave(changes)
-      
-      addToast({
+
+      toast.addToast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
-        variant: "success"
+        variant: "success",
       })
-      
+
       onClose()
     } catch (error) {
-      addToast({
+      toast.addToast({
         title: "Update Failed",
         description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -144,7 +136,7 @@ export default function ProfileDialog({
       name: user.name,
       email: user.email,
       bio: user.bio || "",
-      image: user.image || ""
+      image: user.image || "",
     })
     setErrors({})
     onClose()
@@ -155,18 +147,15 @@ export default function ProfileDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
-          <DialogDescription>
-            Update your profile information and preferences.
-          </DialogDescription>
+          <DialogDescription>Update your profile information and preferences.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Avatar Section */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               {formData.image ? (
                 <Image
-                  src={formData.image}
+                  src={formData.image || "/placeholder.svg"}
                   alt={formData.name}
                   width={80}
                   height={80}
@@ -184,7 +173,6 @@ export default function ProfileDialog({
             </div>
           </div>
 
-          {/* Form Fields */}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -195,9 +183,7 @@ export default function ProfileDialog({
                 placeholder="Enter your name"
                 className={cn(errors.name && "border-destructive")}
               />
-              {errors.name && (
-                <p className="text-sm text-destructive">{errors.name}</p>
-              )}
+              {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -210,9 +196,7 @@ export default function ProfileDialog({
                 placeholder="Enter your email"
                 className={cn(errors.email && "border-destructive")}
               />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -224,18 +208,14 @@ export default function ProfileDialog({
                 placeholder="Tell us a bit about yourself..."
                 className={cn(
                   "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none",
-                  errors.bio && "border-destructive"
+                  errors.bio && "border-destructive",
                 )}
                 rows={3}
                 maxLength={500}
               />
               <div className="flex items-center justify-between">
-                {errors.bio && (
-                  <p className="text-sm text-destructive">{errors.bio}</p>
-                )}
-                <p className="text-xs text-muted-foreground ml-auto">
-                  {formData.bio.length}/500
-                </p>
+                {errors.bio && <p className="text-sm text-destructive">{errors.bio}</p>}
+                <p className="text-xs text-muted-foreground ml-auto">{formData.bio.length}/500</p>
               </div>
             </div>
 
@@ -249,12 +229,8 @@ export default function ProfileDialog({
                 placeholder="https://example.com/avatar.jpg"
                 className={cn(errors.image && "border-destructive")}
               />
-              {errors.image && (
-                <p className="text-sm text-destructive">{errors.image}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Enter a URL to your profile picture
-              </p>
+              {errors.image && <p className="text-sm text-destructive">{errors.image}</p>}
+              <p className="text-xs text-muted-foreground">Enter a URL to your profile picture</p>
             </div>
           </div>
         </div>
