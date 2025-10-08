@@ -9,8 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/AuthContext";
 
+interface NavBarUser {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+}
+
 // NavBar Component
-function NavBar({ user }: { user?: any }) {
+function NavBar({ user }: { user?: NavBarUser | null }) {
   const { signOut } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
