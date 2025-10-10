@@ -59,7 +59,7 @@ export default function DashboardPage() {
   }
 
   const handleNewChat = () => {
-    const newSession = {
+    const newSession: Session = {
       id: `new-${Date.now()}`,
       title: "New Conversation",
       timestamp: new Date(),
@@ -70,9 +70,28 @@ export default function DashboardPage() {
     setIsSidebarOpen(false)
   }
 
+  // Create chat session from transcription
+  const handleTranscriptionComplete = (transcriptionId: string, transcript: string, fileName: string) => {
+    const newSession: Session = {
+      id: `transcription-${transcriptionId}`,
+      title: fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
+      timestamp: new Date(),
+      lastMessage: "Transcription completed - ready to chat!",
+      transcript: transcript,
+    }
+    
+    // Add to sessions
+    setSessions((prev) => [newSession, ...prev])
+    
+    // Set as active session to open ChatView
+    setActiveSessionId(newSession.id)
+    
+    console.log(`Created chat session for ${fileName}:`, newSession)
+  }
+
   const handleSessionClick = (sessionId: string) => {
     setActiveSessionId(sessionId)
-    setIsSidebarOpen(false)
+    setIsSidebarOpen(false) // Close sidebar on mobile when session is selected
   }
 
   const handleDeleteSession = (sessionId: string) => {
@@ -82,6 +101,7 @@ export default function DashboardPage() {
       const remainingSessions = sessions.filter((session) => session.id !== sessionId)
       if (remainingSessions.length > 0) {
         setActiveSessionId(remainingSessions[0].id)
+      } else {
         setActiveSessionId("")
       }
     }
@@ -143,30 +163,14 @@ export default function DashboardPage() {
 
   const handleClearAll = () => {
     setNotifications([])
-  }
-
   const handleFileUpload = (files: File[]) => {
     console.log("Files uploaded:", files)
-  }
-
-  const handleTranscriptionComplete = (fileId: string, transcript: string, fileName: string) => {
-    const newSession: Session = {
-      id: `transcript-${fileId}`,
-      title: fileName.replace(/\.[^/.]+$/, ""),
-      timestamp: new Date(),
-      lastMessage: transcript.substring(0, 100) + (transcript.length > 100 ? "..." : ""),
-      transcript: transcript,
-    }
-
-    setSessions((prev) => [newSession, ...prev])
-    setActiveSessionId(newSession.id)
     setIsSidebarOpen(true)
   }
 
   const handleTitleUpdate = (sessionId: string, newTitle: string) => {
     setSessions((prev) => prev.map((session) => (session.id === sessionId ? { ...session, title: newTitle } : session)))
   }
-
   const activeSession = sessions.find((s) => s.id === activeSessionId)
 
   if (loading) {
@@ -274,9 +278,7 @@ export default function DashboardPage() {
                     onFileUpload={(files) => {
                       console.log("Files uploaded:", files)
                     }}
-                    onTranscriptionComplete={(fileId, transcript, fileName) => {
-                      console.log("Transcription complete:", { fileId, transcript, fileName })
-                    }}
+                    onTranscriptionComplete={handleTranscriptionComplete}
                   />
                 </section>
 
@@ -351,5 +353,5 @@ export default function DashboardPage() {
         onSave={handleProfileSave}
       />
     </div>
-  )
+  )}
 }
