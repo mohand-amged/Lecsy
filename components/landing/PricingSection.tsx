@@ -57,7 +57,7 @@ export function PricingSection() {
           <p className="text-lg text-muted-foreground">Start free, upgrade when you need more</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <Card key={plan.name} className={`relative ${plan.popular ? "border-2 border-foreground shadow-lg" : ""}`}>
               {plan.popular && (
