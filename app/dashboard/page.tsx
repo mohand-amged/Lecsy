@@ -276,7 +276,7 @@ export default function DashboardPage() {
                   className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
                   style={{ animationDelay: "300ms" }}
                 >
-                  <div>
+                  <div id="recent-activity">
                     <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                       Recent Activity
                     </h2>

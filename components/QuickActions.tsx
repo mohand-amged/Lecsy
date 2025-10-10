@@ -40,7 +40,8 @@ export default function QuickActions({ className }: QuickActionsProps) {
       icon: FileText,
       onClick: () => {
         // Navigate to transcripts page
-        console.log("Navigate to recent transcripts")
+        const recentActivitySection = document.getElementById("recent-activity")
+        recentActivitySection?.scrollIntoView({ behavior: "smooth" })
       },
     },
     {
@@ -61,15 +62,7 @@ export default function QuickActions({ className }: QuickActionsProps) {
       onClick: () => {
         console.log("Open transcript library")
       },
-    },
-    {
-      id: "history",
-      title: "Activity History",
-      description: "View your transcription history and analytics",
-      icon: History,
-      onClick: () => {
-        console.log("View activity history")
-      },
+      disabled: true, // Feature coming soon
     },
     {
       id: "settings",
@@ -79,6 +72,7 @@ export default function QuickActions({ className }: QuickActionsProps) {
       onClick: () => {
         console.log("Open settings")
       },
+      disabled: true, // Feature coming soon
     },
     {
       id: "export",
@@ -88,6 +82,7 @@ export default function QuickActions({ className }: QuickActionsProps) {
       onClick: () => {
         console.log("Export data")
       },
+      disabled: true, // Feature coming soon
     },
     {
       id: "share",
@@ -97,7 +92,8 @@ export default function QuickActions({ className }: QuickActionsProps) {
       onClick: () => {
         console.log("Share workspace")
       },
-    },
+      disabled: true, // Feature coming soon
+      },
   ]
 
   const getActionCardStyles = (variant?: string, disabled?: boolean) => {
