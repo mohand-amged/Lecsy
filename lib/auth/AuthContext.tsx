@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { authClient, CallbackContext } from "@/lib/auth/auth-client";
+import { authClient } from "@/lib/auth/auth-client";
 
 interface User {
   id: string;
@@ -32,16 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = useCallback(async () => {
     try {
       setLoading(true);
-      const sessionData = localStorage.getItem(STORAGE_KEY);
-      if (sessionData) {
-        const userData: User = JSON.parse(sessionData);
-        setUser(userData);
+      
+      // Check if we're in the browser (not SSR)
+      if (typeof window !== 'undefined') {
+        const sessionData = localStorage.getItem(STORAGE_KEY);
+        if (sessionData) {
+          const userData: User = JSON.parse(sessionData);
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
       } else {
+        // On server side, just set user to null
         setUser(null);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
-      localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -66,7 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: result.data.user.email,
           image: result.data.user.image || undefined,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        }
         setUser(userData);
       }
 
@@ -97,7 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: result.data.user.email,
           image: result.data.user.image || undefined,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        }
         setUser(userData);
       }
 
@@ -112,14 +125,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await authClient.signOut();
-      localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       setUser(null);
       router.push("/auth/signin");
     } catch (error) {
       console.error("Sign out failed:", error);
-      localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       setUser(null);
-      router.push("/");
+      router.push("/auth/signin");
     }
   };
 
@@ -138,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

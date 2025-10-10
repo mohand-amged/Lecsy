@@ -22,7 +22,7 @@
 
 # production
 /build
-
+.swc
 # misc
 .DS_Store
 *.pem
