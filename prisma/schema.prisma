@@ -8,20 +8,24 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(auto()) @map("_id") @db.ObjectId
-  email        String          @unique
-  name         String
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                String          @id @map("_id")
+  email             String          @unique
+  emailVerified     Boolean         @default(false)
+  name              String
+  image             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-   // Relations
-  transcriptions Transcription[]
-  usageStats     UsageStats?
+  // Relations
+  transcriptions    Transcription[]
+  usageStats        UsageStats?
+  sessions          Session[]
+  accounts          Account[]
 }
 
 model Transcription {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId         String    @db.ObjectId
+  userId         String
   fileName       String
   fileSize       Int
   fileDuration   Float?
@@ -44,7 +48,7 @@ model Transcription {
 
 model UsageStats {
   id                    String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId                String    @unique @db.ObjectId
+  userId                String    @unique
   totalTranscriptions   Int       @default(0)
   totalMinutesProcessed Float     @default(0)
   totalCost             Float     @default(0)
@@ -57,4 +61,52 @@ model UsageStats {
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Better Auth required models
+model Session {
+  id        String   @id @map("_id")
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @map("_id")
+  userId            String
+  accountId         String
+  providerId        String
+  accessToken       String?
+  refreshToken      String?
+  idToken           String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope             String?
+  password          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @map("_id")
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, value])
 }

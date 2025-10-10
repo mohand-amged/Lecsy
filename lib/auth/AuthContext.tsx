@@ -50,27 +50,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await authClient.signIn.email(
-        { email, password },
-        {
-          onSuccess: () => {
-            const userData: User = {
-              id: "1",
-              name: email.split("@")[0],
-              email,
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-            setUser(userData);
-          },
-          onError: (ctx: CallbackContext) => {
-            const message = ctx?.error?.message || "Unknown sign-in error";
-            throw new Error(message);
-          },
-        }
-      );
+      const result = await authClient.signIn.email({
+        email,
+        password,
+      });
 
       if (result.error) {
         return { success: false, error: result.error.message };
+      }
+
+      if (result.data?.user) {
+        const userData: User = {
+          id: result.data.user.id,
+          name: result.data.user.name || "",
+          email: result.data.user.email,
+          image: result.data.user.image || undefined,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        setUser(userData);
       }
 
       return { success: true };
@@ -83,23 +80,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (name: string, email: string, password: string) => {
     try {
-      const result = await authClient.signUp.email(
-        { name, email, password, callbackURL: "/dashboard" },
-        {
-          onSuccess: () => {
-            const userData: User = { id: "1", name, email };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-            setUser(userData);
-          },
-          onError: (ctx: CallbackContext) => {
-            const message = ctx?.error?.message || "Unknown sign-up error";
-            throw new Error(message);
-          },
-        }
-      );
+      const result = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
 
       if (result.error) {
         return { success: false, error: result.error.message };
+      }
+
+      if (result.data?.user) {
+        const userData: User = {
+          id: result.data.user.id,
+          name: result.data.user.name || "",
+          email: result.data.user.email,
+          image: result.data.user.image || undefined,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        setUser(userData);
       }
 
       return { success: true };
@@ -112,19 +111,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await authClient.signOut({
-        onSuccess: () => {
-          localStorage.removeItem(STORAGE_KEY);
-          setUser(null);
-          router.push("/");
-        },
-        onError: (ctx: CallbackContext) => {
-          console.error("Sign out error:", ctx?.error);
-          localStorage.removeItem(STORAGE_KEY);
-          setUser(null);
-          router.push("/");
-        },
-      });
+      await authClient.signOut();
+      localStorage.removeItem(STORAGE_KEY);
+      setUser(null);
+      router.push("/auth/signin");
     } catch (error) {
       console.error("Sign out failed:", error);
       localStorage.removeItem(STORAGE_KEY);
