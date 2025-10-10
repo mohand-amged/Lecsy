@@ -12,7 +12,11 @@ export interface TranscriptionHookResult {
   isTranscribing: boolean
 }
 
-export function useTranscription(): TranscriptionHookResult {
+interface UseTranscriptionOptions {
+  onTranscriptionComplete?: (jobId: string, transcript: string, fileName: string) => void
+}
+
+export function useTranscription(options?: UseTranscriptionOptions): TranscriptionHookResult {
   const [activeJobs, setActiveJobs] = useState<Map<string, TranscriptionJob>>(new Map())
   const [isTranscribing, setIsTranscribing] = useState(false)
   const { addNotification } = useNotifications()
@@ -89,6 +93,11 @@ export function useTranscription(): TranscriptionHookResult {
       },
     })
 
+    // Trigger external callback if provided (for dashboard integration)
+    if (options?.onTranscriptionComplete && job.transcript) {
+      options.onTranscriptionComplete(job.id, job.transcript, job.fileName)
+    }
+
     // Check if we should update isTranscribing
     const hasActiveJobs = Array.from(activeJobs.values()).some(j => 
       j.status === 'pending' || j.status === 'processing'
@@ -96,7 +105,7 @@ export function useTranscription(): TranscriptionHookResult {
     if (!hasActiveJobs) {
       setIsTranscribing(false)
     }
-  }, [addNotification, toast, activeJobs])
+  }, [addNotification, toast, activeJobs, options])
 
   const handleTranscriptionFailed = useCallback(async (job: TranscriptionJob) => {
     // Show error toast

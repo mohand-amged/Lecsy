@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTranscription } from "@/hooks/use-transcription"
 
 interface TranscriptionResult {
   alternatives: Array<{
@@ -61,7 +62,6 @@ const ACCEPTED_AUDIO_TYPES = {
   "audio/mpeg": [".mp3"],
   "audio/wav": [".wav"],
   "audio/mp4": [".m4a"],
-  "audio/x-m4a": [".m4a"],
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
@@ -80,6 +80,30 @@ export default function FileUpload({
   const [playingAudio, setPlayingAudio] = React.useState<string | null>(null)
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map())
   const { addToast } = useToast()
+  
+  // Use our transcription service
+  const { startTranscription } = useTranscription({
+    onTranscriptionComplete: (jobId, transcript, fileName) => {
+      // Update the file status
+      setUploadedFiles((prev) =>
+        prev.map((f) =>
+          f.file.name === fileName
+            ? {
+                ...f,
+                status: "success" as const,
+                transcript,
+                jobId,
+              }
+            : f,
+        )
+      )
+      
+      // Call the parent callback
+      if (onTranscriptionComplete) {
+        onTranscriptionComplete(jobId, transcript, fileName)
+      }
+    }
+  })
 
   // Cleanup audio URLs on unmount
   React.useEffect(() => {
@@ -94,7 +118,7 @@ export default function FileUpload({
         audio.src = ""
       })
     }
-  }, [])
+  }, [uploadedFiles, audioRefs])
 
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     const validTypes = Object.keys(ACCEPTED_AUDIO_TYPES)
@@ -244,7 +268,9 @@ export default function FileUpload({
           setUploadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, progress: 100 } : f)))
 
           if (enableTranscription) {
-            transcribeFile(fileId, file)
+            // Use our transcription service instead of the old API
+            setUploadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, status: "transcribing" as const } : f)))
+            startTranscription(file)
           } else {
             setUploadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, status: "success" as const } : f)))
 

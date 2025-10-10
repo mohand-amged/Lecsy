@@ -7,8 +7,14 @@ import { useTranscription } from '@/hooks/use-transcription'
 import { useNotifications } from '@/lib/notifications/NotificationContext'
 import { Bell, Upload, CheckCircle, AlertCircle } from 'lucide-react'
 
-export default function NotificationDemo() {
-  const { startTranscription, activeJobs, isTranscribing } = useTranscription()
+interface NotificationDemoProps {
+  onTranscriptionComplete?: (jobId: string, transcript: string, fileName: string) => void
+}
+
+export default function NotificationDemo({ onTranscriptionComplete }: NotificationDemoProps) {
+  const { startTranscription, activeJobs, isTranscribing } = useTranscription({
+    onTranscriptionComplete
+  })
   const { 
     notifications, 
     unreadCount, 
@@ -60,9 +66,10 @@ export default function NotificationDemo() {
               onClick={handleTestUpload}
               disabled={isTranscribing}
               className="gap-2"
+              size="lg"
             >
               <Upload className="h-4 w-4" />
-              {isTranscribing ? 'Processing...' : 'Test Transcription'}
+              {isTranscribing ? 'Processing...' : '🎙️ Upload & Create Chat'}
             </Button>
             
             <Button 

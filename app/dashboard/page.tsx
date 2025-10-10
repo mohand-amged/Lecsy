@@ -284,9 +284,9 @@ export default function DashboardPage() {
 
                 <div
                   className="animate-in fade-in slide-in-from-bottom-4 duration-700"
-                  style={{ animationDelay: "200ms" }}
+                  style={{ animationDelay: "250ms" }}
                 >
-                  <QuickActions />
+                  <NotificationDemo onTranscriptionComplete={handleTranscriptionComplete} />
                 </div>
 
                 <section
@@ -353,5 +353,6 @@ export default function DashboardPage() {
         onSave={handleProfileSave}
       />
     </div>
-  )}
+  )
+  }
 }
