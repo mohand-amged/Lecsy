@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { NotificationProvider } from "@/lib/notifications/NotificationContext";
 import { ToastProvider } from "@/hooks/use-toast";
 import { Suspense } from "react";
 
@@ -31,7 +32,9 @@ export default function RootLayout({
         {/* Wrapped children with AuthProvider and Suspense boundary */}
         <Suspense fallback={<div>Loading...</div>}>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <NotificationProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </NotificationProvider>
           </AuthProvider>
         </Suspense>
       </body>

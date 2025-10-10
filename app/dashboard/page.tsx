@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth/AuthContext"
+import { type Notification } from "@/lib/notifications/NotificationContext"
 import DashboardNavBar from "@/components/DashboardNavBar"
 import Sidebar from "@/components/Sidebar"
 import WelcomeBanner from "@/components/WelcomeBanner"
@@ -10,6 +11,7 @@ import FileUpload from "@/components/FileUpload"
 import QuickActions from "@/components/QuickActions"
 import ProfileDialog from "@/components/ProfileDialog"
 import ChatView from "@/components/ChatView"
+import NotificationDemo from "@/components/NotificationDemo"
 
 interface Session {
   id: string
@@ -27,19 +29,7 @@ export default function DashboardPage() {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false)
   const [activeSessionId, setActiveSessionId] = React.useState<string>()
   const [sessions, setSessions] = React.useState<Session[]>([])
-  const [notifications, setNotifications] = React.useState<
-    Array<{
-      id: string
-      title: string
-      description: string
-      timestamp: Date
-      read: boolean
-      type: "info" | "success" | "warning" | "error" | "feature" | "system"
-      actionUrl?: string
-      category?: "security" | "billing" | "activity" | "announcement" | "reminder"
-      priority?: "low" | "normal" | "high" | "urgent"
-    }>
-  >([])
+  const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isWelcomeBannerVisible, setIsWelcomeBannerVisible] = React.useState(true)
 
   React.useEffect(() => {

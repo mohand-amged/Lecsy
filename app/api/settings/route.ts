@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth/auth'
 
 interface UserSettings {
   // Notification preferences
@@ -26,8 +27,11 @@ interface UserSettings {
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add proper authentication check once auth import is fixed
-    // For now, return settings without auth check for testing
+    const session = await auth.api.getSession({ headers: request.headers })
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     // Return default settings for now (will be replaced with database storage later)
     const defaultSettings: UserSettings = {
@@ -58,8 +62,11 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    // TODO: Add proper authentication check once auth import is fixed
-    // For now, accept settings updates without auth check for testing
+    const session = await auth.api.getSession({ headers: request.headers })
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const body = await request.json()
     

@@ -1,8 +1,9 @@
 "use client"
 
-import * as React from "react"
+import React, { useState, useRef, useMemo, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useNotifications, type Notification } from "@/lib/notifications/NotificationContext"
 import {
   Search,
   Bell,
@@ -45,24 +46,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-interface Notification {
-  id: string
-  title: string
-  description: string
-  timestamp: Date
-  read: boolean
-  type: "info" | "success" | "warning" | "error" | "feature" | "system"
-  actionUrl?: string
-  category?: "security" | "billing" | "activity" | "announcement" | "reminder"
-  priority?: "low" | "normal" | "high" | "urgent"
-  avatar?: string
-  metadata?: {
-    user?: string
-    project?: string
-    amount?: string
-    [key: string]: string | undefined
-  }
-}
 
 interface SearchResult {
   id: string
@@ -106,30 +89,55 @@ export default function DashboardNavBar({
   onProfileView,
   onSettingsView,
   onSignOut,
-  notifications = [],
-  onNotificationRead,
-  onNotificationDelete,
-  onMarkAllAsRead,
-  onClearAll,
+  notifications: propNotifications = [],
+  onNotificationRead: propOnNotificationRead,
+  onNotificationDelete: propOnNotificationDelete,
+  onMarkAllAsRead: propOnMarkAllAsRead,
+  onClearAll: propOnClearAll,
   onSearch,
 }: DashboardNavBarProps) {
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false)
-  const [searchTerm, setSearchTerm] = React.useState("")
-  const [searchResults, setSearchResults] = React.useState<SearchResult[]>([])
-  const [isSearching, setIsSearching] = React.useState(false)
-  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false)
-  const [notificationFilter, setNotificationFilter] = React.useState<"all" | "unread" | "important">("all")
-  const searchInputRef = React.useRef<HTMLInputElement>(null)
+  // Use the real notification system
+  const { 
+    notifications: realNotifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead 
+  } = useNotifications()
+  
+  // Use real notifications if available, otherwise fall back to props
+  const notifications = realNotifications.length > 0 ? realNotifications : propNotifications
+  const onNotificationRead = realNotifications.length > 0 ? 
+    (id: string) => markAsRead([id]) : propOnNotificationRead
+  const onNotificationDelete = realNotifications.length > 0 ? 
+    (id: string) => markAsRead([id]) : propOnNotificationDelete // For now, mark as read instead of delete
+  const onMarkAllAsRead = realNotifications.length > 0 ? 
+    markAllAsRead : propOnMarkAllAsRead
+  const onClearAll = realNotifications.length > 0 ? 
+    markAllAsRead : propOnClearAll // For now, mark all as read instead of clear
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [notificationFilter, setNotificationFilter] = useState<"all" | "unread" | "important">("all")
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const unreadNotifications = notifications.filter((n) => !n.read)
-  const urgentNotifications = notifications.filter((n) => n.priority === "urgent" || n.priority === "high")
+  const urgentNotifications = notifications.filter((n) => (n as any).priority === "urgent" || (n as any).priority === "high")
+  
+  // Use real unread count if available
+  const displayUnreadCount = realNotifications.length > 0 ? unreadCount : unreadNotifications.length
 
   // Helper functions
-  const getNotificationIcon = (type: Notification["type"], category?: string) => {
+  const getNotificationIcon = (type: any, category?: string) => {
     if (category === "security") return <Shield className="h-4 w-4" />
     if (category === "billing") return <CreditCard className="h-4 w-4" />
 
     switch (type) {
+      case "transcription_complete":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "transcription_failed":
+        return <AlertCircle className="h-4 w-4 text-red-500" />
       case "success":
         return <CheckCircle className="h-4 w-4 text-green-500" />
       case "warning":
@@ -140,6 +148,8 @@ export default function DashboardNavBar({
         return <Zap className="h-4 w-4 text-blue-500" />
       case "system":
         return <Settings className="h-4 w-4 text-gray-500" />
+      case "info":
+        return <Info className="h-4 w-4 text-blue-500" />
       default:
         return <Info className="h-4 w-4 text-blue-500" />
     }
@@ -174,12 +184,12 @@ export default function DashboardNavBar({
   }
 
   // Filter notifications based on current filter
-  const filteredNotifications = React.useMemo(() => {
+  const filteredNotifications = useMemo(() => {
     switch (notificationFilter) {
       case "unread":
         return notifications.filter((n) => !n.read)
       case "important":
-        return notifications.filter((n) => n.priority === "urgent" || n.priority === "high")
+        return notifications.filter((n) => (n as any).priority === "urgent" || (n as any).priority === "high")
       default:
         return notifications
     }
@@ -199,7 +209,7 @@ export default function DashboardNavBar({
   }, [filteredNotifications])
 
   // Handle keyboard shortcuts
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
@@ -217,14 +227,14 @@ export default function DashboardNavBar({
   }, [])
 
   // Focus search input when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       setTimeout(() => searchInputRef.current?.focus(), 100)
     }
   }, [isSearchOpen])
 
   // Debounced search
-  React.useEffect(() => {
+  useEffect(() => {
     if (!searchTerm.trim() || !onSearch) {
       setSearchResults([])
       return
@@ -265,11 +275,16 @@ export default function DashboardNavBar({
     }
   }
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = (notification: any) => {
     if (!notification.read && onNotificationRead) {
       onNotificationRead(notification.id)
     }
-    if (notification.actionUrl) {
+    
+    // Handle different notification types
+    if (notification.type === 'transcription_complete' && notification.data?.transcriptionId) {
+      // Navigate to dashboard with transcription highlighted
+      window.location.href = `/dashboard?transcription=${notification.data.transcriptionId}`
+    } else if (notification.actionUrl) {
       window.location.href = notification.actionUrl
     }
   }
@@ -326,9 +341,9 @@ export default function DashboardNavBar({
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="relative h-9 w-9">
                         <Bell className="h-6 w-6" />
-                        {unreadNotifications.length > 0 && (
+                        {displayUnreadCount > 0 && (
                           <span className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center animate-pulse">
-                            {unreadNotifications.length > 9 ? "9+" : unreadNotifications.length}
+                            {displayUnreadCount > 9 ? "9+" : displayUnreadCount}
                           </span>
                         )}
                         {urgentNotifications.length > 0 && (
@@ -338,7 +353,7 @@ export default function DashboardNavBar({
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    Notifications {unreadNotifications.length > 0 && `(${unreadNotifications.length} new)`}
+                    Notifications {displayUnreadCount > 0 && `(${displayUnreadCount} new)`}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -356,7 +371,7 @@ export default function DashboardNavBar({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {unreadNotifications.length > 0 && onMarkAllAsRead && (
+                          {displayUnreadCount > 0 && onMarkAllAsRead && (
                             <DropdownMenuItem onClick={onMarkAllAsRead}>
                               <Check className="h-4 w-4 mr-2" />
                               Mark all as read
@@ -380,7 +395,7 @@ export default function DashboardNavBar({
                         label: "All",
                         count: notifications.length,
                       },
-                      { key: "unread", label: "Unread", count: unreadNotifications.length },
+                      { key: "unread", label: "Unread", count: displayUnreadCount },
                       { key: "important", label: "Important", count: urgentNotifications.length },
                     ].map((filter) => (
                       <Button
@@ -487,19 +502,24 @@ export default function DashboardNavBar({
                                   </div>
 
                                   <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                                    {notification.description}
+                                    {notification.message || notification.description}
                                   </p>
 
                                   <div className="flex items-center justify-between pt-1 gap-2">
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                                       <span className="flex items-center gap-1 flex-shrink-0">
                                         <Clock className="h-3 w-3" />
-                                        {formatRelativeTime(notification.timestamp)}
+                                        {formatRelativeTime(notification.createdAt || notification.timestamp)}
                                       </span>
-                                      {notification.metadata?.user && (
+                                      {notification.data?.fileName && (
                                         <span className="flex items-center gap-1 truncate">
-                                          <UserIcon className="h-3 w-3 flex-shrink-0" />
-                                          <span className="truncate">{notification.metadata.user}</span>
+                                          <FileText className="h-3 w-3 flex-shrink-0" />
+                                          <span className="truncate">{notification.data.fileName}</span>
+                                        </span>
+                                      )}
+                                      {notification.data?.wordCount && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {notification.data.wordCount} words
                                         </span>
                                       )}
                                     </div>
