@@ -6,7 +6,7 @@
   - Let users upload a sample file or their own (limit: 2–5 minutes).
   - Place the demo section above the fold on the homepage.
 
-- **2. File Format Support**
+- **2. File Format Support** ✔
   - Clearly indicate support for: MP3, WAV, M4A (audio only).
 
 - **3. Progress Indicator**

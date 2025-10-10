@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { ToastProvider } from "@/hooks/use-toast";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,24 +16,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lecsy AI-Powered Transcript",
-  description: "EASY Tool to transcript your lecture audio to text smoothly",
-};
+  title: "Lecsy - AI Lecture Transcription for Students",
+  description: "Never miss a lecture again. AI-powered transcription for students."
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
-      >
-        <AuthProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </AuthProvider>
+      <body className={`font-sans ${geistSans.variable} ${geistMono.variable} dark`}>
+        {/* Wrapped children with AuthProvider and Suspense boundary */}
+        <Suspense fallback={<div>Loading...</div>}>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
+        </Suspense>
       </body>
     </html>
-  );
+  )
 }

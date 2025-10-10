@@ -9,7 +9,16 @@ import WelcomeBanner from "@/components/WelcomeBanner"
 import FileUpload from "@/components/FileUpload"
 import QuickActions from "@/components/QuickActions"
 import ProfileDialog from "@/components/ProfileDialog"
+import ChatView from "@/components/ChatView"
 import { cn } from "@/lib/utils"
+
+interface Session {
+  id: string
+  title: string
+  timestamp: Date
+  lastMessage?: string
+  transcript?: string
+}
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -18,14 +27,7 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
   const [isProfileDialogOpen, setIsProfileDialogOpen] = React.useState(false)
   const [activeSessionId, setActiveSessionId] = React.useState<string>()
-  const [sessions, setSessions] = React.useState<
-    Array<{
-      id: string
-      title: string
-      timestamp: Date
-      lastMessage?: string
-    }>
-  >([])
+  const [sessions, setSessions] = React.useState<Session[]>([])
   const [notifications, setNotifications] = React.useState<
     Array<{
       id: string
@@ -136,19 +138,24 @@ export default function DashboardPage() {
   }
 
   const handleTranscriptionComplete = (fileId: string, transcript: string, fileName: string) => {
-    const newSession = {
+    const newSession: Session = {
       id: `transcript-${fileId}`,
-      title: fileName.replace(/\.[^/.]+$/, ""), // Remove file extension
+      title: fileName.replace(/\.[^/.]+$/, ""),
       timestamp: new Date(),
       lastMessage: transcript.substring(0, 100) + (transcript.length > 100 ? "..." : ""),
+      transcript: transcript,
     }
 
     setSessions((prev) => [newSession, ...prev])
     setActiveSessionId(newSession.id)
-
-    // Auto-open sidebar to show the new chat
     setIsSidebarOpen(true)
   }
+
+  const handleTitleUpdate = (sessionId: string, newTitle: string) => {
+    setSessions((prev) => prev.map((session) => (session.id === sessionId ? { ...session, title: newTitle } : session)))
+  }
+
+  const activeSession = sessions.find((s) => s.id === activeSessionId)
 
   if (loading) {
     return (
@@ -219,83 +226,100 @@ export default function DashboardPage() {
           className={cn("flex-1 overflow-y-auto transition-all duration-300", isSidebarOpen ? "lg:ml-80" : "lg:ml-0")}
         >
           <div className="container mx-auto p-6 lg:p-8 space-y-10 max-w-7xl">
-            {isWelcomeBannerVisible && (
-              <div className="animate-in fade-in slide-in-from-top-4 duration-700">
-                <WelcomeBanner userName={user.name} onDismiss={handleWelcomeBannerDismiss} />
+            {activeSession && activeSession.transcript ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <ChatView
+                  sessionId={activeSession.id}
+                  title={activeSession.title}
+                  transcript={activeSession.transcript}
+                  timestamp={activeSession.timestamp}
+                  onTitleUpdate={handleTitleUpdate}
+                />
               </div>
-            )}
+            ) : (
+              <>
+                {isWelcomeBannerVisible && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+                    <WelcomeBanner userName={user.name} onDismiss={handleWelcomeBannerDismiss} />
+                  </div>
+                )}
 
-            <section
-              id="file-upload"
-              className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
-              style={{ animationDelay: "100ms" }}
-            >
-              <div>
-                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Upload Audio Files
-                </h2>
-                <p className="text-muted-foreground text-base">
-                  Upload your lecture recordings to start transcription and automatically create a new chat
-                </p>
-              </div>
-              <FileUpload onFileUpload={handleFileUpload} onTranscriptionComplete={handleTranscriptionComplete} />
-            </section>
+                <section
+                  id="file-upload"
+                  className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                  style={{ animationDelay: "100ms" }}
+                >
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                      Upload Audio Files
+                    </h2>
+                    <p className="text-muted-foreground text-base">
+                      Upload your lecture recordings to start transcription and automatically create a new chat
+                    </p>
+                  </div>
+                  <FileUpload onFileUpload={handleFileUpload} onTranscriptionComplete={handleTranscriptionComplete} />
+                </section>
 
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "200ms" }}>
-              <QuickActions />
-            </div>
+                <div
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-700"
+                  style={{ animationDelay: "200ms" }}
+                >
+                  <QuickActions />
+                </div>
 
-            <section
-              className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
-              style={{ animationDelay: "300ms" }}
-            >
-              <div>
-                <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Recent Activity
-                </h2>
-                <p className="text-muted-foreground text-base">Your latest transcriptions and conversations</p>
-              </div>
+                <section
+                  className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700"
+                  style={{ animationDelay: "300ms" }}
+                >
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                      Recent Activity
+                    </h2>
+                    <p className="text-muted-foreground text-base">Your latest transcriptions and conversations</p>
+                  </div>
 
-              {sessions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {sessions.slice(0, 6).map((session, index) => (
-                    <div
-                      key={session.id}
-                      className="group p-5 border border-border/50 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30 hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-2"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                      onClick={() => handleSessionClick(session.id)}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors">
-                          {session.title}
-                        </h3>
-                        <div className="h-2 w-2 rounded-full bg-primary/40 group-hover:bg-primary group-hover:scale-125 transition-all" />
+                  {sessions.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {sessions.slice(0, 6).map((session, index) => (
+                        <div
+                          key={session.id}
+                          className="group p-5 border border-border/50 rounded-xl bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30 hover:shadow-lg transition-all duration-300 cursor-pointer animate-in fade-in slide-in-from-bottom-2"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                          onClick={() => handleSessionClick(session.id)}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="font-semibold text-base truncate group-hover:text-primary transition-colors">
+                              {session.title}
+                            </h3>
+                            <div className="h-2 w-2 rounded-full bg-primary/40 group-hover:bg-primary group-hover:scale-125 transition-all" />
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+                            {session.lastMessage || "No messages yet"}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-medium">
+                            {session.timestamp.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-16 border border-dashed border-border/60 rounded-xl bg-muted/20">
+                      <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-5">
+                        <span className="text-2xl">📝</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
-                        {session.lastMessage || "No messages yet"}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-medium">
-                        {session.timestamp.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                      <h3 className="text-xl font-semibold mb-2">No activity yet</h3>
+                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                        Start by uploading an audio file or creating a new conversation
                       </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 border border-dashed border-border/60 rounded-xl bg-muted/20">
-                  <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-5">
-                    <span className="text-2xl">📝</span>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">No activity yet</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Start by uploading an audio file or creating a new conversation
-                  </p>
-                </div>
-              )}
-            </section>
+                  )}
+                </section>
+              </>
+            )}
           </div>
         </main>
       </div>
