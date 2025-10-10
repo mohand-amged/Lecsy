@@ -55,16 +55,6 @@ export default function QuickActions({ className }: QuickActionsProps) {
       disabled: true, // Feature coming soon
     },
     {
-      id: "library",
-      title: "Transcript Library",
-      description: "Browse all your transcriptions",
-      icon: BookOpen,
-      onClick: () => {
-        console.log("Open transcript library")
-      },
-      disabled: true, // Feature coming soon
-    },
-    {
       id: "settings",
       title: "Preferences",
       description: "Customize your transcription settings",
