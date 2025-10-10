@@ -18,18 +18,34 @@ const plans = [
     price: "$5",
     description: "Everything you need to excel",
     features: [
-      "Unlimited transcription",
+      "20 hours/month transcription",
+      "Everything in free plan",
       "Unlimited storage",
       "Advanced AI search",
-      "Export to PDF, DOCX, TXT",
-      "Priority support",
-      "Collaboration tools",
+      "Export to TXT",
     ],
     cta: "Start free trial",
     href: "/sign-up",
     variant: "default" as const,
     popular: true,
   },
+  {
+    name: "Pro",
+    price: "$10",
+    description: "For professionals and teams",
+    features: [
+      "Unlimited transcription",
+      "Everything in student plan",
+      "Unlimited storage",
+      "Advanced AI search",
+      "Export to PDF, DOCX, TXT",
+      "Priority support",
+    ],
+    cta: "Start free trial",
+    href: "/sign-up",
+    variant: "default" as const,
+    popular: false,
+  }
 ]
 
 export function PricingSection() {

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import jsPDF from "jspdf"
-import { AudioPlayer } from "@/components/audio-player"
+import { AudioPlayer } from "@/components/AudioPlayer"
 
 interface ChatViewProps {
   sessionId: string
