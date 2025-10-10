@@ -7,8 +7,14 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+interface FileUploadComponentProps {
+  enableTranscription?: boolean
+  maxSize?: number
+  onTranscriptionComplete?: (fileId: string, transcript: string, fileName: string) => void
+}
+
 interface DemoSectionProps {
-  FileUploadComponent?: React.ComponentType<any>
+  FileUploadComponent?: React.ComponentType<FileUploadComponentProps>
 }
 
 export const DemoSection = forwardRef<HTMLElement, DemoSectionProps>(({ FileUploadComponent }, ref) => {

@@ -257,7 +257,15 @@ export default function DashboardPage() {
                       Upload your lecture recordings to start transcription and automatically create a new chat
                     </p>
                   </div>
-                  <FileUpload onFileUpload={handleFileUpload} onTranscriptionComplete={handleTranscriptionComplete} />
+                  <FileUpload
+                    enableTranscription={true}
+                    onFileUpload={(files) => {
+                      console.log("Files uploaded:", files)
+                    }}
+                    onTranscriptionComplete={(fileId, transcript, fileName) => {
+                      console.log("Transcription complete:", { fileId, transcript, fileName })
+                    }}
+                  />
                 </section>
 
                 <div

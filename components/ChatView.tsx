@@ -8,17 +8,27 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import jsPDF from "jspdf"
+import { AudioPlayer } from "@/components/audio-player"
 
 interface ChatViewProps {
   sessionId: string
   title: string
   transcript: string
   timestamp: Date
+  audioUrl?: string // Added optional audio URL prop
   onTitleUpdate: (sessionId: string, newTitle: string) => void
   className?: string
 }
 
-export default function ChatView({ sessionId, title, transcript, timestamp, onTitleUpdate, className }: ChatViewProps) {
+export default function ChatView({
+  sessionId,
+  title,
+  transcript,
+  timestamp,
+  audioUrl, // Destructure audioUrl prop
+  onTitleUpdate,
+  className,
+}: ChatViewProps) {
   const [isEditingTitle, setIsEditingTitle] = React.useState(false)
   const [editedTitle, setEditedTitle] = React.useState(title)
   const { addToast } = useToast()
@@ -165,6 +175,17 @@ export default function ChatView({ sessionId, title, transcript, timestamp, onTi
           </div>
         </CardContent>
       </Card>
+
+      {audioUrl && (
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">Recording</h2>
+              <AudioPlayer audioUrl={audioUrl} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Transcript Section */}
       <Card className="border-border/50 shadow-sm">
