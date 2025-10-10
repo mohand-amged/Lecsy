@@ -286,7 +286,7 @@ export default function DashboardNavBar({
         <div className="flex h-14 md:h-16 items-center px-3 md:px-6 gap-2 md:gap-4">
           {/* Left side - Menu button and Logo */}
           <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-            <Button variant="ghost" size="icon" onClick={onMenuToggle} className="lg:hidden h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={onMenuToggle} className="h-9 w-9">
               <Menu className="h-5 w-5" />
             </Button>
 
@@ -307,7 +307,7 @@ export default function DashboardNavBar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(true)} className="h-9 w-9">
-                    <Search className="h-5 w-5" />
+                    <Search className="h-6 w-6" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Search</TooltipContent>
@@ -321,7 +321,7 @@ export default function DashboardNavBar({
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="relative h-9 w-9">
-                        <Bell className="h-5 w-5" />
+                        <Bell className="h-6 w-6" />
                         {unreadNotifications.length > 0 && (
                           <span className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center animate-pulse">
                             {unreadNotifications.length > 9 ? "9+" : unreadNotifications.length}
@@ -371,7 +371,11 @@ export default function DashboardNavBar({
 
                   <div className="flex gap-1">
                     {[
-                      { key: "all", label: "All", count: notifications.length },
+                      {
+                        key: "all",
+                        label: "All",
+                        count: notifications.length,
+                      },
                       { key: "unread", label: "Unread", count: unreadNotifications.length },
                       { key: "important", label: "Important", count: urgentNotifications.length },
                     ].map((filter) => (

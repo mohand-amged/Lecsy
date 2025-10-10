@@ -60,18 +60,18 @@ export default function Sidebar({
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={onClose} />}
+      {isOpen && <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />}
 
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-80 transform bg-card/50 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out lg:relative lg:top-0 lg:h-full lg:translate-x-0",
+          "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-80 transform bg-card/50 backdrop-blur-xl border-r border-border transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-full flex-col p-4">
           {/* Close button for mobile */}
-          <div className="flex items-center justify-between mb-4 lg:hidden">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Conversations</h2>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />

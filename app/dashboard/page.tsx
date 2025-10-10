@@ -10,7 +10,6 @@ import FileUpload from "@/components/FileUpload"
 import QuickActions from "@/components/QuickActions"
 import ProfileDialog from "@/components/ProfileDialog"
 import ChatView from "@/components/ChatView"
-import { cn } from "@/lib/utils"
 
 interface Session {
   id: string
@@ -222,9 +221,7 @@ export default function DashboardPage() {
           activeSessionId={activeSessionId}
         />
 
-        <main
-          className={cn("flex-1 overflow-y-auto transition-all duration-300", isSidebarOpen ? "lg:ml-80" : "lg:ml-0")}
-        >
+        <main className="flex-1 overflow-y-auto transition-all duration-300">
           <div className="container mx-auto p-6 lg:p-8 space-y-10 max-w-7xl">
             {activeSession && activeSession.transcript ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
