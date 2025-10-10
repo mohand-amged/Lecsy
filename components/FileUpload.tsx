@@ -2,7 +2,19 @@
 
 import * as React from "react"
 import { useDropzone, type FileRejection } from "react-dropzone"
-import { Upload, File, CheckCircle, AlertCircle, X, Languages, MessageSquare, Play, Pause, RotateCcw, Trash2 } from "lucide-react"
+import {
+  Upload,
+  File,
+  CheckCircle,
+  AlertCircle,
+  X,
+  Languages,
+  MessageSquare,
+  Play,
+  Pause,
+  RotateCcw,
+  Trash2,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -113,9 +125,7 @@ export default function FileUpload({
   const transcribeFile = React.useCallback(
     async (fileId: string, file: File, retryCount = 0) => {
       try {
-        setUploadedFiles((prev) =>
-          prev.map((f) => (f.id === fileId ? { ...f, status: "transcribing" as const } : f))
-        )
+        setUploadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, status: "transcribing" as const } : f)))
 
         const formData = new FormData()
         formData.append("audio", file)
@@ -159,8 +169,8 @@ export default function FileUpload({
                   transcript,
                   jobId: data.jobId,
                 }
-              : f
-          )
+              : f,
+          ),
         )
 
         addToast({
@@ -173,7 +183,7 @@ export default function FileUpload({
         }
       } catch (error: unknown) {
         let message = "Unknown error occurred"
-        
+
         if (error instanceof Error) {
           if (error.name === "AbortError") {
             message = "Transcription timeout - file may be too large"
@@ -185,9 +195,12 @@ export default function FileUpload({
         // Retry logic
         if (retryCount < MAX_RETRIES) {
           console.log(`Retrying transcription (${retryCount + 1}/${MAX_RETRIES})...`)
-          setTimeout(() => {
-            transcribeFile(fileId, file, retryCount + 1)
-          }, 2000 * (retryCount + 1)) // Exponential backoff
+          setTimeout(
+            () => {
+              transcribeFile(fileId, file, retryCount + 1)
+            },
+            2000 * (retryCount + 1),
+          ) // Exponential backoff
           return
         }
 
@@ -199,8 +212,8 @@ export default function FileUpload({
                   status: "error" as const,
                   error: message,
                 }
-              : f
-          )
+              : f,
+          ),
         )
 
         addToast({
@@ -210,16 +223,14 @@ export default function FileUpload({
         })
       }
     },
-    [language, addToast, onTranscriptionComplete, transcribeEndpoint]
+    [language, addToast, onTranscriptionComplete, transcribeEndpoint],
   )
 
   const uploadFile = React.useCallback(
     (fileId: string, file: File) => {
       // Create audio URL for preview
       const audioUrl = URL.createObjectURL(file)
-      setUploadedFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? { ...f, audioUrl } : f))
-      )
+      setUploadedFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, audioUrl } : f)))
 
       // Simulate upload progress (replace with actual upload in production)
       let progress = 0
@@ -244,12 +255,12 @@ export default function FileUpload({
           }
         } else {
           setUploadedFiles((prev) =>
-            prev.map((f) => (f.id === fileId ? { ...f, progress: Math.min(progress, 100) } : f))
+            prev.map((f) => (f.id === fileId ? { ...f, progress: Math.min(progress, 100) } : f)),
           )
         }
       }, 100)
     },
-    [addToast, enableTranscription, transcribeFile]
+    [addToast, enableTranscription, transcribeFile],
   )
 
   const onDrop = React.useCallback(
@@ -323,7 +334,7 @@ export default function FileUpload({
         })
       }
     },
-    [maxSize, onFileUpload, addToast, uploadFile]
+    [maxSize, onFileUpload, addToast, uploadFile],
   )
 
   const removeFile = (fileId: string) => {
@@ -344,11 +355,7 @@ export default function FileUpload({
     const file = uploadedFiles.find((f) => f.id === fileId)
     if (file) {
       setUploadedFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileId
-            ? { ...f, status: "uploading" as const, progress: 0, error: undefined }
-            : f
-        )
+        prev.map((f) => (f.id === fileId ? { ...f, status: "uploading" as const, progress: 0, error: undefined } : f)),
       )
       uploadFile(fileId, file.file)
     }
@@ -375,7 +382,7 @@ export default function FileUpload({
     if (!audio) {
       audio = new Audio(audioUrl)
       audioRefs.current.set(fileId, audio)
-      
+
       audio.addEventListener("ended", () => {
         setPlayingAudio(null)
       })
@@ -391,7 +398,7 @@ export default function FileUpload({
           otherAudio.pause()
         }
       })
-      
+
       audio.play()
       setPlayingAudio(fileId)
     }
@@ -419,7 +426,7 @@ export default function FileUpload({
           language,
         },
         null,
-        2
+        2,
       )
       mimeType = "application/json"
       extension = "json"
@@ -457,9 +464,7 @@ export default function FileUpload({
 
   const successCount = uploadedFiles.filter((f) => f.status === "success").length
   const errorCount = uploadedFiles.filter((f) => f.status === "error").length
-  const inProgressCount = uploadedFiles.filter((f) => 
-    f.status === "uploading" || f.status === "transcribing"
-  ).length
+  const inProgressCount = uploadedFiles.filter((f) => f.status === "uploading" || f.status === "transcribing").length
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -496,7 +501,7 @@ export default function FileUpload({
               "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
               isDragActive && !isDragReject && "border-primary bg-primary/5 scale-[1.02]",
               isDragReject && "border-destructive bg-destructive/5",
-              !isDragActive && "border-border hover:border-primary/50 hover:bg-accent/30"
+              !isDragActive && "border-border hover:border-primary/50 hover:bg-accent/30",
             )}
           >
             <input {...getInputProps()} />
@@ -507,7 +512,7 @@ export default function FileUpload({
                   "h-20 w-20 rounded-full flex items-center justify-center transition-all duration-300",
                   isDragActive && !isDragReject && "bg-primary/10 scale-110",
                   isDragReject && "bg-destructive/10",
-                  !isDragActive && "bg-muted"
+                  !isDragActive && "bg-muted",
                 )}
               >
                 <Upload
@@ -515,7 +520,7 @@ export default function FileUpload({
                     "h-10 w-10 transition-colors",
                     isDragActive && !isDragReject && "text-primary",
                     isDragReject && "text-destructive",
-                    !isDragActive && "text-muted-foreground"
+                    !isDragActive && "text-muted-foreground",
                   )}
                 />
               </div>
@@ -575,7 +580,7 @@ export default function FileUpload({
                   {inProgressCount > 0 && <span>⋯ {inProgressCount} in progress</span>}
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={clearAll} className="gap-2">
+              <Button variant="outline" size="sm" onClick={clearAll} className="gap-2 bg-transparent">
                 <Trash2 className="h-4 w-4" />
                 Clear All
               </Button>
