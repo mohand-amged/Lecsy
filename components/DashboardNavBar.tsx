@@ -27,6 +27,7 @@ import {
   Archive,
   Filter,
   MoreHorizontal,
+  Pencil,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -80,7 +81,6 @@ interface DashboardNavBarProps {
     bio?: string
     role?: string
     status?: "online" | "away" | "busy" | "offline"
-    plan?: "free" | "pro" | "enterprise"
     profileCompletion?: number
     verified?: boolean
     joinedDate?: Date
@@ -88,6 +88,8 @@ interface DashboardNavBarProps {
   }
   onMenuToggle: () => void
   onProfileEdit: () => void
+  onProfileView?: () => void
+  onSettingsView?: () => void
   onSignOut: () => void
   notifications?: Notification[]
   onNotificationRead?: (id: string) => void
@@ -101,6 +103,8 @@ export default function DashboardNavBar({
   user,
   onMenuToggle,
   onProfileEdit,
+  onProfileView,
+  onSettingsView,
   onSignOut,
   notifications = [],
   onNotificationRead,
@@ -632,15 +636,22 @@ export default function DashboardNavBar({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {onProfileView && (
+                  <DropdownMenuItem onClick={onProfileView} className="cursor-pointer py-2.5">
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    View Profile
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={onProfileEdit} className="cursor-pointer py-2.5">
-                  <UserIcon className="mr-2 h-4 w-4" />
+                  <Pencil className="mr-2 h-4 w-4" />
                   Edit Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer py-2.5">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                {onSettingsView && (
+                  <DropdownMenuItem onClick={onSettingsView} className="cursor-pointer py-2.5">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={onSignOut}
                   className="cursor-pointer text-destructive focus:text-destructive py-2.5"

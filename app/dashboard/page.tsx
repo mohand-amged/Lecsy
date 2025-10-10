@@ -92,7 +92,6 @@ export default function DashboardPage() {
       const remainingSessions = sessions.filter((session) => session.id !== sessionId)
       if (remainingSessions.length > 0) {
         setActiveSessionId(remainingSessions[0].id)
-      } else {
         setActiveSessionId("")
       }
     }
@@ -102,11 +101,35 @@ export default function DashboardPage() {
     setIsProfileDialogOpen(true)
   }
 
-  const handleProfileSave = async (updatedUser: Partial<{ name: string; email: string; image?: string }>) => {
-    console.log("Updating profile:", updatedUser)
-    // TODO: Call your API endpoint to update user profile
-    // await fetch('/api/user/profile', { method: 'PATCH', body: JSON.stringify(updatedUser) })
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  const handleProfileView = () => {
+    router.push('/profile')
+  }
+
+  const handleSettingsView = () => {
+    router.push('/settings')
+  }
+
+  const handleProfileSave = async (updatedData: any) => {
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update profile')
+      }
+
+      // Optionally refresh user data in auth context
+      console.log('Profile updated successfully')
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      throw error
+    }
   }
 
   const handleSignOut = async () => {
@@ -202,6 +225,8 @@ export default function DashboardPage() {
         user={user}
         onMenuToggle={handleMenuToggle}
         onProfileEdit={handleProfileEdit}
+        onProfileView={handleProfileView}
+        onSettingsView={handleSettingsView}
         onSignOut={handleSignOut}
         notifications={notifications}
         onNotificationRead={handleNotificationRead}
