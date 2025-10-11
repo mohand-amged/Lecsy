@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Upload, FileText, Settings, History, Download, Share2, Mic, BookOpen } from "lucide-react"
+import { Upload, FileText, Settings, Download, Share2, Mic } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 

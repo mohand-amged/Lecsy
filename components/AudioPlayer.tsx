@@ -16,8 +16,8 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = React.useState(false)
   const [currentTime, setCurrentTime] = React.useState(0)
   const [duration, setDuration] = React.useState(0)
-  const [isMuted, setIsMuted] = React.useState(false)
   const [volume, setVolume] = React.useState(1)
+  const [isMuted, setIsMuted] = React.useState(false)
 
   React.useEffect(() => {
     const audio = audioRef.current
@@ -54,17 +54,8 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
     const audio = audioRef.current
     if (!audio) return
 
-    const newTime = value[0]
-    audio.currentTime = newTime
-    setCurrentTime(newTime)
-  }
-
-  const toggleMute = () => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    audio.muted = !isMuted
-    setIsMuted(!isMuted)
+    audio.currentTime = value[0]
+    setCurrentTime(value[0])
   }
 
   const handleVolumeChange = (value: number[]) => {
@@ -74,29 +65,38 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
     const newVolume = value[0]
     audio.volume = newVolume
     setVolume(newVolume)
-    if (newVolume > 0 && isMuted) {
+    setIsMuted(newVolume === 0)
+  }
+
+  const toggleMute = () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isMuted) {
+      audio.volume = volume || 0.5
       setIsMuted(false)
-      audio.muted = false
+    } else {
+      audio.volume = 0
+      setIsMuted(true)
     }
   }
 
   const formatTime = (time: number) => {
-    if (isNaN(time)) return "0:00"
     const minutes = Math.floor(time / 60)
     const seconds = Math.floor(time % 60)
     return `${minutes}:${seconds.toString().padStart(2, "0")}`
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-4", className)}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
       <div className="flex items-center gap-4">
-        <Button onClick={togglePlay} size="sm" variant="outline" className="h-10 w-10 rounded-full p-0 bg-transparent">
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+        <Button variant="outline" size="icon" onClick={togglePlay} className="h-10 w-10 rounded-full bg-transparent">
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
 
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-2">
           <Slider
             value={[currentTime]}
             max={duration || 100}
@@ -104,14 +104,14 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
             onValueChange={handleSeek}
             className="cursor-pointer"
           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button onClick={toggleMute} size="sm" variant="ghost" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
           <Slider
@@ -119,7 +119,7 @@ export function AudioPlayer({ audioUrl, className }: AudioPlayerProps) {
             max={1}
             step={0.01}
             onValueChange={handleVolumeChange}
-            className="w-20 cursor-pointer"
+            className="w-20"
           />
         </div>
       </div>
