@@ -32,19 +32,12 @@ export async function POST(
       return NextResponse.json({ error: 'Audio file not found' }, { status: 404 });
     }
 
-    // Start transcription - upload file directly to AssemblyAI
-    console.log('Transcription: Reading file from:', audioFile.filePath);
+    // Start transcription using Cloudinary URL
+    console.log('Transcription: Processing audio file:', audioFile.filePath);
     
-    // Read the audio file from disk
-    const filePath = join(process.cwd(), 'public', audioFile.filePath.replace('/uploads/', 'uploads/'));
-    console.log('Transcription: Full file path:', filePath);
-    
-    const audioBuffer = await readFile(filePath);
-    console.log('Transcription: File read successfully, size:', audioBuffer.length);
-    
-    // Upload file to AssemblyAI and start transcription
+    // Use the Cloudinary URL directly for transcription
     const transcript = await assemblyAI.transcripts.transcribe({
-      audio: audioBuffer,
+      audio_url: audioFile.filePath, // This is now a Cloudinary URL
       ...defaultConfig,
     });
     
