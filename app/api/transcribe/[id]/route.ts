@@ -32,12 +32,12 @@ export async function POST(
       return NextResponse.json({ error: 'Audio file not found' }, { status: 404 });
     }
 
-    // Start transcription using Cloudinary URL
+    // Start transcription using Vercel Blob URL
     console.log('Transcription: Processing audio file:', audioFile.filePath);
     
-    // Use the Cloudinary URL directly for transcription
+    // Use the Vercel Blob URL directly for transcription
     const transcript = await assemblyAI.transcripts.transcribe({
-      audio_url: audioFile.filePath, // This is now a Cloudinary URL
+      audio_url: audioFile.filePath, // This is now a Vercel Blob URL
       ...defaultConfig,
     });
     

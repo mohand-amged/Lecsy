@@ -2,49 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { auth } from '@/lib/auth';
 import { AudioService } from '@/lib/AssemblyAI/database';
-import { v2 as cloudinary } from 'cloudinary';
+import { put } from '@vercel/blob';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Helper function to upload to Cloudinary
-async function uploadToCloudinary(
+// Helper function to upload to Vercel Blob
+async function uploadToVercelBlob(
   buffer: Buffer,
   fileName: string,
-  originalName: string
-): Promise<{ url: string; publicId: string }> {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'video', // Use 'video' for audio files
-        public_id: `audio/${fileName}`,
-        folder: 'lecsy-audio',
-        format: 'mp3',
-        tags: ['audio', 'transcription'],
-        context: {
-          original_name: originalName,
-          uploaded_at: new Date().toISOString(),
-        },
-      },
-      (error, result) => {
-        if (error) {
-          console.error('Cloudinary upload error:', error);
-          reject(error);
-        } else if (result) {
-          resolve({
-            url: result.secure_url,
-            publicId: result.public_id,
-          });
-        } else {
-          reject(new Error('Upload failed - no result'));
-        }
-      }
-    ).end(buffer);
+  contentType: string
+): Promise<{ url: string; pathname: string }> {
+  const blob = await put(`audio/${fileName}`, buffer, {
+    access: 'public',
+    contentType,
+    addRandomSuffix: false,
   });
+  
+  return {
+    url: blob.url,
+    pathname: blob.pathname,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -81,21 +56,21 @@ export async function POST(request: NextRequest) {
     const fileExtension = file.name.split('.').pop() || 'mp3';
     const fileName = `${id}.${fileExtension}`;
 
-    // Upload to Cloudinary
-    console.log('Upload API: Uploading to Cloudinary');
+    // Upload to Vercel Blob
+    console.log('Upload API: Uploading to Vercel Blob');
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // Check if Cloudinary is configured
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    // Check if Vercel Blob is configured
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
       return NextResponse.json({
-        error: 'Cloudinary not configured',
-        details: 'Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your environment variables'
+        error: 'Vercel Blob not configured',
+        details: 'Please add BLOB_READ_WRITE_TOKEN to your environment variables'
       }, { status: 500 });
     }
     
-    const cloudinaryResult = await uploadToCloudinary(buffer, fileName, file.name);
-    console.log('Upload API: File uploaded to Cloudinary:', cloudinaryResult.url);
+    const blobResult = await uploadToVercelBlob(buffer, fileName, file.type);
+    console.log('Upload API: File uploaded to Vercel Blob:', blobResult.url);
 
     // Save to database
     console.log('Upload API: Saving to database via AudioService');
@@ -103,7 +78,7 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       originalName: file.name,
       fileName,
-      filePath: cloudinaryResult.url,
+      filePath: blobResult.url,
       fileSize: file.size,
       mimeType: file.type,
     });
