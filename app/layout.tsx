@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lecsy - AI-powered Trnascription",
+  title: "Lecsy AI-powered Transcription",
   description: "Lecsy is an AI-powered transcription service that converts audio files into accurate and searchable text.",
 };
 
