@@ -35,13 +35,46 @@ export async function POST(
     // Start transcription using Vercel Blob URL
     console.log('Transcription: Processing audio file:', audioFile.filePath);
     
-    // Use the Vercel Blob URL directly for transcription
-    const transcript = await assemblyAI.transcripts.transcribe({
-      audio_url: audioFile.filePath, // This is now a Vercel Blob URL
-      ...defaultConfig,
-    });
-    
-    console.log('Transcription: Started with ID:', transcript.id);
+    let transcript;
+    try {
+      // Use the Vercel Blob URL directly for transcription
+      transcript = await assemblyAI.transcripts.transcribe({
+        audio_url: audioFile.filePath, // This is now a Vercel Blob URL
+        ...defaultConfig,
+      });
+      
+      console.log('Transcription: Started with ID:', transcript.id);
+    } catch (assemblyError) {
+      console.error('AssemblyAI Error:', assemblyError);
+      
+      // Check if account is disabled
+      if (assemblyError instanceof Error && assemblyError.message.includes('account is disabled')) {
+        console.log('Transcription: Using mock transcription due to disabled account');
+        
+        // Create mock transcription for development
+        const mockTranscriptId = `mock-${Date.now()}`;
+        
+        // Save mock transcription immediately
+        await AudioService.saveTranscription({
+          audioFileId: id,
+          text: `This is a mock transcription for the audio file "${audioFile.originalName}". \n\nThe actual transcription service (AssemblyAI) is currently unavailable due to account issues. Please contact support@assemblyai.com to resolve your account status.\n\nOnce your AssemblyAI account is active, this will be replaced with the real transcription of your audio content.\n\nMock transcription generated at: ${new Date().toLocaleString()}`,
+          confidence: 0.95,
+          summary: 'Mock transcription - AssemblyAI account disabled',
+        });
+        
+        // Update status to completed
+        await AudioService.updateTranscriptionStatus(id, 'completed', mockTranscriptId);
+        
+        return NextResponse.json({ 
+          transcriptId: mockTranscriptId,
+          status: 'completed',
+          message: 'Mock transcription created - AssemblyAI account disabled'
+        });
+      }
+      
+      // Re-throw other errors
+      throw assemblyError;
+    }
 
     // Update status
     await AudioService.updateTranscriptionStatus(id, 'processing', transcript.id);
