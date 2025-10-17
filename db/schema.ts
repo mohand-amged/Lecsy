@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, real, jsonb, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -60,9 +61,99 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
+export const audioFiles = pgTable("audio_files", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  originalName: text("original_name").notNull(),
+  fileName: text("file_name").notNull(), // UUID-based filename
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: text("mime_type").notNull(),
+  duration: integer("duration"), // in seconds
+  uploadStatus: text("upload_status", { 
+    enum: ["pending", "completed", "error"] 
+  }).default("pending").notNull(),
+  transcriptionStatus: text("transcription_status", { 
+    enum: ["pending", "processing", "completed", "error"] 
+  }).default("pending").notNull(),
+  assemblyaiId: text("assemblyai_id"), // AssemblyAI transcript ID
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const transcriptions = pgTable("transcriptions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  audioFileId: text("audio_file_id")
+    .notNull()
+    .references(() => audioFiles.id, { onDelete: "cascade" }),
+  text: text("text"),
+  confidence: real("confidence"),
+  speakers: jsonb("speakers"), // Speaker diarization data
+  sentiment: jsonb("sentiment"), // Sentiment analysis
+  keyPhrases: jsonb("key_phrases"), // Key phrases/topics
+  summary: text("summary"), // Auto-generated summary
+  words: jsonb("words"), // Word-level timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Relations
+export const userRelations = relations(user, ({ many }) => ({
+  audioFiles: many(audioFiles),
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
+  user: one(user, {
+    fields: [audioFiles.userId],
+    references: [user.id],
+  }),
+  transcription: one(transcriptions, {
+    fields: [audioFiles.id],
+    references: [transcriptions.audioFileId],
+  }),
+}));
+
+export const transcriptionsRelations = relations(transcriptions, ({ one }) => ({
+  audioFile: one(audioFiles, {
+    fields: [transcriptions.audioFileId],
+    references: [audioFiles.id],
+  }),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
 export const schema = {
   user,
   session,
   account,
   verification,
+  audioFiles,
+  transcriptions,
+  userRelations,
+  audioFilesRelations,
+  transcriptionsRelations,
+  sessionRelations,
+  accountRelations,
 };
