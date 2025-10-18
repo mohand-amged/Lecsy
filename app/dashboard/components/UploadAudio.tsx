@@ -77,10 +77,10 @@ export function UploadAudio() {
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-8 border border-gray-700/50">
+    <div className="bg-black rounded-xl shadow-xl p-8 border border-gray-700">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-          <Upload className="h-6 w-6 text-white" />
+        <div className="p-2 bg-white rounded-lg">
+          <Upload className="h-6 w-6 text-black" />
         </div>
         <div>
           <h3 className="text-xl font-bold text-white">Upload Audio</h3>
@@ -91,8 +91,8 @@ export function UploadAudio() {
       <div
         className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
           dragActive
-            ? 'border-blue-400 bg-blue-500/10 scale-105'
-            : 'border-gray-600 hover:border-blue-500 hover:bg-gray-700/30'
+            ? 'border-white bg-gray-800 scale-105'
+            : 'border-gray-600 hover:border-white hover:bg-gray-900'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -100,13 +100,13 @@ export function UploadAudio() {
         onDrop={handleDrop}
       >
         <div className="flex flex-col items-center">
-          <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full mb-4">
-            <Upload className="h-16 w-16 text-blue-400" />
+          <div className="p-4 bg-gray-800 rounded-full mb-4">
+            <Upload className="h-16 w-16 text-white" />
           </div>
-          <p className="text-lg text-gray-300 mb-2 font-medium">
+          <p className="text-lg text-white mb-2 font-medium">
             Drop your lecture recording here
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-400 mb-6">
             or click to browse from your device
           </p>
           
@@ -122,7 +122,7 @@ export function UploadAudio() {
           <Button
             asChild
             disabled={isUploading}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            className="bg-white hover:bg-gray-200 text-black font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <label htmlFor="audio-upload" className="cursor-pointer">
               {isUploading ? (
@@ -141,9 +141,9 @@ export function UploadAudio() {
         </div>
       </div>
       
-      <div className="mt-4 p-4 bg-gray-900/50 rounded-lg border border-gray-700/30">
+      <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-700">
         <p className="text-xs text-gray-400 flex items-center gap-2">
-          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+          <span className="w-2 h-2 bg-white rounded-full"></span>
           Supported: MP3, WAV, M4A, AAC, OGG • Max size: 100MB
         </p>
       </div>
