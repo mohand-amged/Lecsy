@@ -50,12 +50,14 @@ export class AudioService {
   static async updateTranscriptionStatus(
     id: string, 
     status: 'pending' | 'processing' | 'completed' | 'error',
-    assemblyaiId?: string
+    assemblyaiId?: string,
+    errorMessage?: string
   ) {
     await db.update(audioFiles)
       .set({ 
         transcriptionStatus: status,
         assemblyaiId,
+        errorMessage,
         updatedAt: new Date()
       })
       .where(eq(audioFiles.id, id));
@@ -67,11 +69,37 @@ export class AudioService {
     confidence?: number;
     speakers?: SpeakerData[];
     sentiment?: SentimentData[];
+    entities?: any[];
     keyPhrases?: KeyPhraseData[];
     summary?: string;
+    chapters?: any[];
     words?: WordData[];
+    contentSafetyLabels?: any[];
+    languageCode?: string;
+    rawResponse?: any;
   }) {
     const [transcription] = await db.insert(transcriptions).values(data).returning();
+    return transcription;
+  }
+
+  static async updateTranscription(audioFileId: string, data: {
+    text?: string;
+    confidence?: number;
+    speakers?: SpeakerData[];
+    sentiment?: SentimentData[];
+    entities?: any[];
+    keyPhrases?: KeyPhraseData[];
+    summary?: string;
+    chapters?: any[];
+    words?: WordData[];
+    contentSafetyLabels?: any[];
+    languageCode?: string;
+    rawResponse?: any;
+  }) {
+    const [transcription] = await db.update(transcriptions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(transcriptions.audioFileId, audioFileId))
+      .returning();
     return transcription;
   }
 
@@ -83,5 +111,32 @@ export class AudioService {
       },
     });
     return audioFile;
+  }
+
+  static async getUserAudioFiles(userId: string, limit = 10, offset = 0) {
+    const files = await db.query.audioFiles.findMany({
+      where: eq(audioFiles.userId, userId),
+      with: {
+        transcription: true,
+      },
+      limit,
+      offset,
+      orderBy: (audioFiles, { desc }) => [desc(audioFiles.createdAt)],
+    });
+    return files;
+  }
+
+  static async deleteAudioFile(id: string, userId: string) {
+    const [deletedFile] = await db.delete(audioFiles)
+      .where(eq(audioFiles.id, id) && eq(audioFiles.userId, userId))
+      .returning();
+    return deletedFile;
+  }
+
+  static async getTranscriptionByAudioFileId(audioFileId: string) {
+    const transcription = await db.query.transcriptions.findFirst({
+      where: eq(transcriptions.audioFileId, audioFileId),
+    });
+    return transcription;
   }
 }

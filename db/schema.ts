@@ -10,7 +10,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -20,7 +20,7 @@ export const session = pgTable("session", {
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
@@ -45,7 +45,7 @@ export const account = pgTable("account", {
   password: text("password"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -57,7 +57,7 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -67,7 +67,7 @@ export const audioFiles = pgTable("audio_files", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   originalName: text("original_name").notNull(),
-  fileName: text("file_name").notNull(), // UUID-based filename
+  fileName: text("file_name").notNull(),
   filePath: text("file_path").notNull(),
   fileSize: integer("file_size").notNull(),
   mimeType: text("mime_type").notNull(),
@@ -78,7 +78,9 @@ export const audioFiles = pgTable("audio_files", {
   transcriptionStatus: text("transcription_status", { 
     enum: ["pending", "processing", "completed", "error"] 
   }).default("pending").notNull(),
-  assemblyaiId: text("assemblyai_id"), // AssemblyAI transcript ID
+  assemblyaiId: text("assemblyai_id").unique(), // AssemblyAI transcript ID
+  assemblyaiUploadUrl: text("assemblyai_upload_url"), // URL returned by AssemblyAI upload
+  errorMessage: text("error_message"), // Store any error messages
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -90,14 +92,37 @@ export const transcriptions = pgTable("transcriptions", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   audioFileId: text("audio_file_id")
     .notNull()
+    .unique() // One transcription per audio file
     .references(() => audioFiles.id, { onDelete: "cascade" }),
   text: text("text"),
   confidence: real("confidence"),
-  speakers: jsonb("speakers"), // Speaker diarization data
-  sentiment: jsonb("sentiment"), // Sentiment analysis
-  keyPhrases: jsonb("key_phrases"), // Key phrases/topics
+  
+  // Speaker diarization
+  speakers: jsonb("speakers"), // Array of speaker segments
+  
+  // Sentiment analysis
+  sentiment: jsonb("sentiment"), // Overall and per-sentence sentiment
+  
+  // Entity detection & key phrases
+  entities: jsonb("entities"), // Detected entities (names, places, etc)
+  keyPhrases: jsonb("key_phrases"), // Important phrases/topics
+  
+  // Summarization
   summary: text("summary"), // Auto-generated summary
-  words: jsonb("words"), // Word-level timestamps
+  chapters: jsonb("chapters"), // Auto chapters with timestamps
+  
+  // Word-level data
+  words: jsonb("words"), // Word-level timestamps and confidence
+  
+  // Content safety
+  contentSafetyLabels: jsonb("content_safety_labels"), // Content moderation results
+  
+  // Language detection
+  languageCode: text("language_code"), // Detected language
+  
+  // Raw AssemblyAI response (for debugging/future features)
+  rawResponse: jsonb("raw_response"),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -112,7 +137,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
 }));
 
-export const audioFilesRelations = relations(audioFiles, ({ one, many }) => ({
+export const audioFilesRelations = relations(audioFiles, ({ one }) => ({
   user: one(user, {
     fields: [audioFiles.userId],
     references: [user.id],
@@ -143,6 +168,14 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+// Type exports
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+export type AudioFile = typeof audioFiles.$inferSelect;
+export type NewAudioFile = typeof audioFiles.$inferInsert;
+export type Transcription = typeof transcriptions.$inferSelect;
+export type NewTranscription = typeof transcriptions.$inferInsert;
 
 export const schema = {
   user,

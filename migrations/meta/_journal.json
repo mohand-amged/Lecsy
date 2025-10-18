@@ -8,6 +8,13 @@
       "when": 1760726625819,
       "tag": "0000_naive_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760809464917,
+      "tag": "0001_eminent_king_cobra",
+      "breakpoints": true
     }
   ]
 }

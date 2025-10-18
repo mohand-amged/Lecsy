@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileText, MessageSquare, Loader2 } from 'lucide-react';
+import { Download, FileText, MessageSquare, Loader2, Clock } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useTranscription } from '@/hooks/useTranscription';
 
 interface AudioData {
   id: string;
@@ -21,14 +22,46 @@ export default function ChatPage() {
   const params = useParams();
   const id = params.id as string;
   const [audioData, setAudioData] = useState<AudioData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const {
+    startTranscription,
+    getTranscription,
+    status: transcriptionStatus,
+    loading: transcriptionLoading,
+    error: transcriptionError,
+    polling,
+    isCompleted,
+    isProcessing,
+    transcription,
+    progress
+  } = useTranscription();
 
   useEffect(() => {
-    fetchAudioData();
+    fetchInitialAudioData();
   }, [id]);
 
-  const fetchAudioData = async () => {
+  // Update audioData when transcription status changes
+  useEffect(() => {
+    if (transcriptionStatus) {
+      setAudioData(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          transcriptionStatus: transcriptionStatus.status,
+          transcription: transcriptionStatus.transcription ? {
+            text: transcriptionStatus.transcription.text,
+            confidence: transcriptionStatus.transcription.confidence || 0,
+            summary: transcriptionStatus.transcription.summary
+          } : prev.transcription
+        };
+      });
+    }
+  }, [transcriptionStatus]);
+
+  const fetchInitialAudioData = async () => {
     try {
       const response = await fetch(`/api/audio/${id}`);
       
@@ -54,28 +87,30 @@ export default function ChatPage() {
       setAudioData(data);
       setError(null);
       
-      // Poll for transcription updates if processing
+      // If processing, start the optimized polling
       if (data.transcriptionStatus === 'processing') {
-        setTimeout(fetchAudioData, 5000); // Poll every 5 seconds
+        getTranscription(id);
       }
     } catch (error) {
       console.error('Failed to fetch audio data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load audio data. Please try again.');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
-  const startTranscription = async () => {
+  const handleStartTranscription = async () => {
     try {
-      await fetch(`/api/transcribe/${id}`, { method: 'POST' });
-      fetchAudioData(); // Refresh data
+      await startTranscription(id);
+      // Update local state immediately
+      setAudioData(prev => prev ? { ...prev, transcriptionStatus: 'processing' } : null);
     } catch (error) {
       console.error('Failed to start transcription:', error);
+      setError('Failed to start transcription. Please try again.');
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
@@ -94,8 +129,8 @@ export default function ChatPage() {
             <Button
               onClick={() => {
                 setError(null);
-                setLoading(true);
-                fetchAudioData();
+                setInitialLoading(true);
+                fetchInitialAudioData();
               }}
               className="bg-black hover:bg-gray-800 text-white"
             >
@@ -193,10 +228,18 @@ export default function ChatPage() {
               <h3 className="text-xl font-bold text-white mb-2">Ready to Transcribe</h3>
               <p className="text-gray-600 mb-6">Start processing your audio to generate transcript</p>
               <Button
-                onClick={startTranscription}
-                className="bg-black hover:bg-gray-800 text-white"
+                onClick={handleStartTranscription}
+                disabled={transcriptionLoading}
+                className="bg-black hover:bg-gray-800 text-white disabled:opacity-50"
               >
-                Start Transcription
+                {transcriptionLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  'Start Transcription'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -207,11 +250,19 @@ export default function ChatPage() {
               <h3 className="text-xl font-bold text-white mb-2">Transcription Failed</h3>
               <p className="text-gray-600 mb-6">Something went wrong processing your audio</p>
               <Button
-                onClick={startTranscription}
+                onClick={handleStartTranscription}
+                disabled={transcriptionLoading}
                 variant="outline"
-                className="border-red-600 text-red-600 hover:bg-red-50"
+                className="border-red-600 text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
-                Retry Transcription
+                {transcriptionLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  'Retry Transcription'
+                )}
               </Button>
             </CardContent>
           </Card>
