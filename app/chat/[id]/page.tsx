@@ -77,27 +77,27 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <Card className="max-w-md w-full bg-white border border-gray-300">
           <CardContent className="p-8 text-center">
-            <div className="text-red-400 text-4xl mb-4">⚠️</div>
-            <h3 className="text-xl font-bold text-white mb-2">Error Loading Audio</h3>
-            <p className="text-gray-400 mb-6">{error}</p>
+            <div className="text-red-600 text-4xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold text-black mb-2">Error Loading Audio</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
             <Button
               onClick={() => {
                 setError(null);
                 setLoading(true);
                 fetchAudioData();
               }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="bg-black hover:bg-gray-800 text-white"
             >
               Try Again
             </Button>
@@ -108,19 +108,19 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+    <div className="min-h-screen bg-black p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl font-bold text-white mb-3">
             {audioData?.originalName || 'Audio Recording'}
           </h1>
           <div className="flex items-center gap-4 text-gray-400">
             <span className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${
-                audioData?.transcriptionStatus === 'completed' ? 'bg-green-400' :
-                audioData?.transcriptionStatus === 'processing' ? 'bg-yellow-400' :
-                audioData?.transcriptionStatus === 'error' ? 'bg-red-400' : 'bg-gray-400'
+                audioData?.transcriptionStatus === 'completed' ? 'bg-white' :
+                audioData?.transcriptionStatus === 'processing' ? 'bg-gray-400' :
+                audioData?.transcriptionStatus === 'error' ? 'bg-gray-600' : 'bg-gray-400'
               }`}></div>
               Status: {audioData?.transcriptionStatus || 'Unknown'}
             </span>
@@ -134,14 +134,14 @@ export default function ChatPage() {
             <div className="flex gap-4 mb-8">
               <Button
                 onClick={() => window.open(`/api/audio/${id}/pdf`)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="bg-white hover:bg-gray-200 text-black font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
               <Button
                 onClick={() => window.open(`/api/audio/${id}/word`)}
-                className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="bg-black hover:bg-gray-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Download Word
@@ -149,15 +149,15 @@ export default function ChatPage() {
             </div>
 
             {/* Transcript Section */}
-            <Card className="mb-8 bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+            <Card className="mb-8 bg-white border border-gray-300">
               <CardHeader>
-                <CardTitle className="flex items-center text-white">
-                  <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mr-3">
+                <CardTitle className="flex items-center text-black">
+                  <div className="p-2 bg-black rounded-lg mr-3">
                     <FileText className="h-5 w-5 text-white" />
                   </div>
                   Transcript
                   {audioData.transcription.confidence && (
-                    <span className="ml-auto text-sm text-gray-400">
+                    <span className="ml-auto text-sm text-gray-600">
                       {Math.round(audioData.transcription.confidence * 100)}% confidence
                     </span>
                   )}
@@ -165,13 +165,13 @@ export default function ChatPage() {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="text-gray-300 leading-relaxed text-lg">
+                  <p className="text-black leading-relaxed text-lg">
                     {audioData.transcription.text}
                   </p>
                   {audioData.transcription.summary && (
-                    <div className="mt-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                      <h4 className="text-blue-400 font-semibold mb-2">Summary</h4>
-                      <p className="text-gray-300">{audioData.transcription.summary}</p>
+                    <div className="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
+                      <h4 className="text-black font-semibold mb-2">Summary</h4>
+                      <p className="text-gray-700">{audioData.transcription.summary}</p>
                     </div>
                   )}
                 </div>
@@ -179,37 +179,37 @@ export default function ChatPage() {
             </Card>
           </>
         ) : audioData?.transcriptionStatus === 'processing' ? (
-          <Card className="mb-8 bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+          <Card className="mb-8 bg-black border border-gray-300">
             <CardContent className="p-12 text-center">
-              <Loader2 className="h-16 w-16 animate-spin text-blue-400 mx-auto mb-4" />
+              <Loader2 className="h-16 w-16 animate-spin text-white mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Processing Your Audio</h3>
-              <p className="text-gray-400">This usually takes a few minutes...</p>
+              <p className="text-gray-600">This usually takes a few minutes...</p>
             </CardContent>
           </Card>
         ) : audioData?.transcriptionStatus === 'pending' ? (
-          <Card className="mb-8 bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+          <Card className="mb-8 bg-black border border-gray-300">
             <CardContent className="p-12 text-center">
-              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <FileText className="h-16 w-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Ready to Transcribe</h3>
-              <p className="text-gray-400 mb-6">Start processing your audio to generate transcript</p>
+              <p className="text-gray-600 mb-6">Start processing your audio to generate transcript</p>
               <Button
                 onClick={startTranscription}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="bg-black hover:bg-gray-800 text-white"
               >
                 Start Transcription
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <Card className="mb-8 bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+          <Card className="mb-8 bg-black border border-gray-300">
             <CardContent className="p-12 text-center">
-              <div className="text-red-400 mb-4">❌</div>
+              <div className="text-red-600 mb-4">❌</div>
               <h3 className="text-xl font-bold text-white mb-2">Transcription Failed</h3>
-              <p className="text-gray-400 mb-6">Something went wrong processing your audio</p>
+              <p className="text-gray-600 mb-6">Something went wrong processing your audio</p>
               <Button
                 onClick={startTranscription}
                 variant="outline"
-                className="border-red-500 text-red-400 hover:bg-red-500/10"
+                className="border-red-600 text-red-600 hover:bg-red-50"
               >
                 Retry Transcription
               </Button>
@@ -219,27 +219,27 @@ export default function ChatPage() {
 
         {/* Chat Section - Only show when transcription is complete */}
         {audioData?.transcriptionStatus === 'completed' && (
-          <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700/50">
+          <Card className="bg-black border border-gray-300">
             <CardHeader>
               <CardTitle className="flex items-center text-white">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg mr-3">
+                <div className="p-2 bg-black rounded-lg mr-3">
                   <MessageSquare className="h-5 w-5 text-white" />
                 </div>
                 Chat with AI
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-12 text-center border border-gray-700/30">
-                <div className="p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full mb-6 w-fit mx-auto">
-                  <MessageSquare className="h-16 w-16 text-purple-400" />
+              <div className="bg-gray-100 rounded-xl p-12 text-center border border-gray-300">
+                <div className="p-4 bg-gray-200 rounded-full mb-6 w-fit mx-auto">
+                  <MessageSquare className="h-16 w-16 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">
                   AI Study Assistant Coming Soon! 🤖
                 </h3>
-                <p className="text-gray-400 mb-2 text-lg">
+                <p className="text-gray-700 mb-2 text-lg">
                   Get ready to chat with your transcript
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600">
                   Ask questions, get summaries, create study guides, and analyze your content with AI
                 </p>
               </div>
