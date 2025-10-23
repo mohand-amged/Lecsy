@@ -14,3 +14,9 @@ export async function proxy(request: NextRequest) {
 	return NextResponse.next();
 }
 
+export const config = {
+	matcher: ["/dashboard"], // Specify the routes the middleware applies to
+};
+
+export const runtime = "nodejs";
+
