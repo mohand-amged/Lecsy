@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession, signOut } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ import {
 export function NavBar() {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Mock user stats - replace with real data from your API
   const userStats = {
@@ -51,6 +52,18 @@ export function NavBar() {
       .slice(0, 2);
   };
 
+  const getPageName = () => {
+    if (pathname === '/dashboard') return 'Dashboard';
+    if (pathname === '/profile') return 'Profile';
+    if (pathname === '/history') return 'History';
+    if (pathname === '/settings') return 'Settings';
+    if (pathname === '/subscription') return 'Subscription';
+    if (pathname === '/help') return 'Help';
+    if (pathname === '/notifications') return 'Notifications';
+    if (pathname?.startsWith('/chat')) return 'Chat';
+    return 'Dashboard';
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-black backdrop-blur-md border-b border-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,7 +80,7 @@ export function NavBar() {
             {/* Breadcrumb indicator */}
             <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-400">
               <span>/</span>
-              <span className="font-medium">Dashboard</span>
+              <span className="font-medium">{getPageName()}</span>
             </div>
           </div>
 
