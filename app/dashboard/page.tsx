@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { StatsCard } from "./components/StatsCard";
 import { UploadAudio } from "./components/UploadAudio";
-import { RecentRecordings } from "./components/RecentRecordings";
 import { NavBar } from "./components/NavBar";
 import { WelcomeBanner } from "./components/WelcomeBanner";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -76,11 +75,6 @@ export default function DashboardPage() {
         {/* Upload Section - Full Width */}
         <div className="animate-in slide-in-from-left duration-700 mb-8">
           <UploadAudio />
-        </div>
-        
-        {/* Recent Recordings Section - Full Width */}
-        <div className="animate-in slide-in-from-right duration-700 mb-8">
-          <RecentRecordings />
         </div>
       </div>
     </div>
