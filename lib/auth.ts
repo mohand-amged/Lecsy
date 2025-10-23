@@ -18,5 +18,9 @@ export const auth = betterAuth({
      "http://localhost:3000",
      "https://lecsy.vercel.app"
     ],
+    session: {
+        expiresIn: 60 * 60 * 24 * 7, // 1 week in seconds
+        updateAge: 60 * 60 * 24, // Update session every 24 hours
+    },
     plugins: [nextCookies()],
 });
