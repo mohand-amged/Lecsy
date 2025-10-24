@@ -16,6 +16,7 @@ export default function SignUpPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showEmailSent, setShowEmailSent] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +44,8 @@ export default function SignUpPage() {
             if (result.error) {
                 setError(result.error.message || 'Sign Up failed');
             } else {
-                router.push('/dashboard')
+                // Show email verification message instead of redirecting
+                setShowEmailSent(true);
             }
         } catch (error) {
             setError(error instanceof Error ? error.message : 'An error occurred');
@@ -51,6 +53,37 @@ export default function SignUpPage() {
             setLoading(false);
         }
     };
+
+    // Show email sent confirmation
+    if (showEmailSent) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-background p-4">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>Check Your Email</CardTitle>
+                        <CardDescription>We've sent you a verification link</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="text-center space-y-2">
+                            <div className="text-6xl">📧</div>
+                            <p className="text-muted-foreground">
+                                We've sent a verification email to <strong>{email}</strong>
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Click the link in the email to verify your account and complete your registration.
+                            </p>
+                            <p className="text-sm text-muted-foreground pt-4">
+                                Didn't receive the email? Check your spam folder or contact support.
+                            </p>
+                        </div>
+                        <Button asChild className="w-full" variant="outline">
+                            <Link href="/login">Back to Login</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     // return
     return (

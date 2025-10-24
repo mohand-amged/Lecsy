@@ -35,21 +35,21 @@ Next.js 16.0 was released and includes:
 ⚠️ **IMPORTANT**: Upgrade BEFORE implementing security features to avoid rework and compatibility issues.
 
 ### Tasks:
-- [ ] Backup current codebase
+- [✔] Backup current codebase
   ```bash
   git checkout -b upgrade/nextjs-16
   git commit -am "Pre-upgrade checkpoint"
   ```
-- [ ] Review Next.js 16 breaking changes
+- [✔] Review Next.js 16 breaking changes
   - Visit: https://nextjs.org/blog/next-16
   - Check migration guide for App Router changes
   - Note any API changes affecting middleware
-- [ ] Update Next.js and related dependencies
+- [✔] Update Next.js and related dependencies
   ```bash
   npm install next@latest react@latest react-dom@latest
   npm install eslint-config-next@latest
   ```
-- [ ] Update other critical dependencies
+- [✔] Update other critical dependencies
   ```bash
   npm install better-auth@latest
   npm install @types/node@latest
@@ -71,7 +71,7 @@ Next.js 16.0 was released and includes:
     }
   }
   ```
-- [ ] Test core functionality
+- [✔] Test core functionality
   ```bash
   npm run dev
   # Test:
@@ -80,31 +80,31 @@ Next.js 16.0 was released and includes:
   # - File upload
   # - API routes
   ```
-- [ ] Run build to check for errors
+- [✔] Run build to check for errors
   ```bash
   npm run build
   ```
-- [ ] Fix any type errors or warnings
-- [ ] Update middleware.ts if API changed
+- [✔] Fix any type errors or warnings
+- [✔] Update middleware.ts if API changed
   ```typescript
   // Next.js 16 may have new middleware patterns
   // Check official docs for updates
   ```
-- [ ] Test in production mode
+- [✔] Test in production mode
   ```bash
   npm run build
   npm run start
   ```
-- [ ] Run linting
+- [✔] Run linting
   ```bash
   npm run lint
   ```
-- [ ] Commit upgrade
+- [✔] Commit upgrade
   ```bash
   git add .
   git commit -m "Upgrade to Next.js 16 and related dependencies"
   ```
-- [ ] Merge to main after testing
+- [✔] Merge to main after testing
 
 ### Potential Breaking Changes to Watch:
 1. **Middleware API changes** - May affect authentication flow

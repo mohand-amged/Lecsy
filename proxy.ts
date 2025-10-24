@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
+import { auth } from "./lib/auth";
 
 export async function proxy(request: NextRequest) {
-	const sessionCookie = getSessionCookie(request);
+    // Get session from Better Auth
+    const session = await auth.api.getSession({
+        headers: request.headers,
+    });
 
-    // THIS IS NOT SECURE!
-    // This is the recommended approach to optimistically redirect users
-    // We recommend handling auth checks in each page/route
-	if (!sessionCookie) {
-		return NextResponse.redirect(new URL("/", request.url));
-	}
+    // Check if user is authenticated
+    if (!session) {
+        return NextResponse.redirect(new URL("/login", request.url));
+    }
 
-	return NextResponse.next();
+    // Check if email is verified
+    if (!session.user.emailVerified) {
+        // Allow access to verify-email page
+        if (request.nextUrl.pathname !== "/verify-email") {
+            return NextResponse.redirect(new URL("/verify-email?message=Please verify your email to continue", request.url));
+        }
+    }
+
+    return NextResponse.next();
 }
 
 export const config = {
