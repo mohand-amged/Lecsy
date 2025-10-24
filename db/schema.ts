@@ -5,7 +5,6 @@ export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -49,17 +48,6 @@ export const account = pgTable("account", {
     .notNull(),
 });
 
-export const verification = pgTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
 
 export const transcription = pgTable("transcription", {
   id: text("id").primaryKey(),
@@ -127,7 +115,6 @@ export const schema = {
   user,
   session,
   account,
-  verification,
   transcription,
   userRelations,
   sessionRelations,
