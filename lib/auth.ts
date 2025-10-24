@@ -21,5 +21,12 @@ export const auth = betterAuth({
         expiresIn: 60 * 60 * 24 * 7, // 1 week in seconds
         updateAge: 60 * 60 * 24, // Update session every 24 hours
     },
+    advanced: {
+        // CSRF protection is enabled by default in Better Auth
+        useSecureCookies: process.env.NODE_ENV === "production",
+        crossSubDomainCookies: {
+            enabled: false,
+        },
+    },
     plugins: [nextCookies()],
 });
