@@ -8,14 +8,17 @@ export const auth = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET || "dev-secret-key-change-in-production",
     emailAndPassword: {
         enabled: true,
+        requireEmailVerification: false,
+        minPasswordLength: 6,
+        maxPasswordLength: 128,
     },
     database: drizzleAdapter(db, {
         provider: "pg",
         schema,
     }),
-     trustedOrigins: [
-     "http://localhost:3000",
-     "https://lecsy.vercel.app"
+    trustedOrigins: [
+        "http://localhost:3000",
+        "https://lecsy.vercel.app"
     ],
     session: {
         expiresIn: 60 * 60 * 24 * 7, // 1 week in seconds

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Star } from "lucide-react"
 
 export function SocialProofSection() {
@@ -9,7 +9,6 @@ export function SocialProofSection() {
     {
       name: "Sarah Chen",
       role: "Computer Science, MIT",
-      avatar: "/asian-woman-student.jpg",
       content:
         "Lecsy completely changed how I study. I can actually focus on understanding the material instead of frantically writing notes!",
       rating: 5,
@@ -17,7 +16,6 @@ export function SocialProofSection() {
     {
       name: "Marcus Johnson",
       role: "Business, Stanford",
-      avatar: "/black-man-student.jpg",
       content:
         "The PDF export feature is a game-changer. My notes are organized and professional-looking. My grades have never been better.",
       rating: 5,
@@ -25,7 +23,6 @@ export function SocialProofSection() {
     {
       name: "Emma Rodriguez",
       role: "Biology, UCLA",
-      avatar: "/latina-woman-student.jpg",
       content:
         "I used to stress about missing important details. Now I have complete transcripts of every lecture. Worth every penny!",
       rating: 5,
@@ -96,8 +93,7 @@ export function SocialProofSection() {
                   {/* Author */}
                   <div className="mt-6 flex items-center gap-3">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={testimonial.avatar || "/placeholder.svg"} alt={testimonial.name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {testimonial.name
                           .split(" ")
                           .map((n) => n[0])
