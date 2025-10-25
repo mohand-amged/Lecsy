@@ -6,7 +6,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Globe, ChevronDown, Sparkles, Check } from 'lucide-react';
+import { Globe, ChevronDown, Check } from 'lucide-react';
 
 export type SupportedLanguage = 'auto' | 'en' | 'ar';
 
