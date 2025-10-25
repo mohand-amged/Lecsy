@@ -14,22 +14,22 @@ const publicPaths = ["/", "/login", "/signup", "/forget-password", "/api/auth"];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  try {
-    // Check if the current path is protected
-    const isProtected = protectedPaths.some((path) =>
-      pathname.startsWith(path)
-    );
+  // Check if the current path is protected
+  const isProtected = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
 
-    // Check if the current path is public
-    const isPublic = publicPaths.some((path) => pathname.startsWith(path));
+  // Check if the current path is public
+  const isPublic = publicPaths.some((path) => pathname.startsWith(path));
 
-    // Allow public paths without session check
-    if (isPublic && !isProtected) {
-      return NextResponse.next();
-    }
+  // Allow public paths without session check
+  if (isPublic && !isProtected) {
+    return NextResponse.next();
+  }
 
-    // For protected paths, validate session
-    if (isProtected) {
+  // For protected paths, validate session
+  if (isProtected) {
+    try {
       // Get session using Better Auth API
       const session = await auth.api.getSession({
         headers: request.headers,
@@ -58,29 +58,28 @@ export async function proxy(request: NextRequest) {
 
       // Log successful authentication for monitoring
       console.info(`Authenticated request to ${pathname} by user ${session.user.id}`);
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    // Log the error for debugging
-    console.error("Proxy error:", error);
-
-    // On error, redirect to login for protected paths
-    const isProtected = protectedPaths.some((path) =>
-      pathname.startsWith(path)
-    );
-
-    if (isProtected) {
+    } catch (error) {
+      // Log the session validation error
+      console.error(`Session validation error for ${pathname}:`, error);
+      
+      // Only show session_error if it's actually a session/auth issue
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      loginUrl.searchParams.set("error", "session_error");
+      
+      // Only add error param if it looks like an actual session issue
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.toLowerCase().includes('session') || 
+          errorMessage.toLowerCase().includes('auth') ||
+          errorMessage.toLowerCase().includes('token')) {
+        loginUrl.searchParams.set("error", "session_error");
+      }
       
       return NextResponse.redirect(loginUrl);
     }
-
-    // For non-protected paths, allow the request to continue
-    return NextResponse.next();
   }
+
+  // For non-protected paths, continue
+  return NextResponse.next();
 }
 
 // Configure which routes should be processed by this proxy

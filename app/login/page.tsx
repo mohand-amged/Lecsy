@@ -37,7 +37,9 @@ function LoginForm() {
             if (result.error) {
                 setError(result.error.message || 'Sign In failed');
             } else {
-                router.push('/dashboard')
+                // Redirect to callback URL if provided, otherwise go to dashboard
+                const callbackUrl = searchParams.get('callbackUrl');
+                router.push(callbackUrl || '/dashboard');
             }
         } catch (error) {
             setError(error instanceof Error ? error.message : 'An error occurred');

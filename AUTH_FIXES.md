@@ -2,7 +2,21 @@
 
 ## Issues Fixed
 
-### 1. ✅ Suspense Boundary Error in Login Page
+### 1. ✅ Session Expiration Error Handling
+**Problem:** Proxy was catching all errors and showing "Your session has expired" message, even for non-session issues (database errors, import errors, etc.).
+
+**Solution:**
+- Improved error handling in proxy to only show session_error for actual authentication issues
+- Added specific error detection for session/auth/token-related errors
+- Moved try-catch block to only wrap session validation logic
+- Better error logging for debugging
+
+**Files Changed:**
+- `proxy.ts`
+
+---
+
+### 2. ✅ Suspense Boundary Error in Login Page
 **Problem:** `useSearchParams()` was not wrapped in a Suspense boundary, causing build failures.
 
 **Solution:** 
@@ -48,6 +62,45 @@
 
 **Files Changed:**
 - `app/profile/page.tsx`
+
+---
+
+### 5. ✅ Missing Callback URL Handling
+**Problem:** After login, users were always redirected to `/dashboard` instead of their original destination.
+
+**Solution:**
+- Added proper `callbackUrl` parameter handling in login form
+- Users now get redirected back to where they were trying to go after login
+
+**Files Changed:**
+- `app/login/page.tsx`
+
+---
+
+### 6. ✅ Missing Verification Table
+**Problem:** Better Auth requires a `verification` table for email verification and password reset flows.
+
+**Solution:**
+- Added `verification` table to database schema
+- Created migration script `0009_add_verification_table.sql`
+- Exported verification table in schema
+
+**Files Changed:**
+- `db/schema.ts`
+- `migrations/0009_add_verification_table.sql`
+
+---
+
+### 7. ✅ Missing emailVerified Field
+**Problem:** User schema was missing `emailVerified` field that Better Auth expects.
+
+**Solution:**
+- Added `emailVerified` boolean field to user table schema
+- Defaults to false
+- Aligns with existing database migrations
+
+**Files Changed:**
+- `db/schema.ts`
 
 ---
 
