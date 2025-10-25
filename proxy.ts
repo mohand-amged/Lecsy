@@ -3,10 +3,10 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 
 // Define protected paths that require authentication
-const protectedPaths = ["/dashboard", "/profile", "/settings", "/history"];
+const protectedPaths = ["/dashboard", "/profile", "/settings", "/history", "/chat", "/subscription"];
 
 // Define public paths that should be accessible without authentication
-const publicPaths = ["/", "/login", "/signup", "/api/auth"];
+const publicPaths = ["/", "/login", "/signup", "/forget-password", "/api/auth"];
 
 /**
  * Proxy to handle authentication and route protection

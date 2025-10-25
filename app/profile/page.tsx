@@ -29,7 +29,7 @@ function ProfilePage() {
   useEffect(() => {
     if (!isPending) {
       if (!session) {
-        router.push('/auth/signin');
+        router.push('/login');
       } else {
         setFormData({
           name: session.user.name || '',
