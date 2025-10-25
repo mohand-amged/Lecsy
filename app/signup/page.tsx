@@ -38,16 +38,31 @@ export default function SignUpPage() {
                 name,
                 email,
                 password,
+            }, {
+                onRequest: () => {
+                    console.log('Signup request:', { name, email });
+                },
+                onSuccess: (ctx) => {
+                    console.log('Signup success:', ctx);
+                },
+                onError: (ctx) => {
+                    console.error('Signup error:', ctx.error);
+                },
             });
 
             if (result.error) {
-                setError(result.error.message || 'Sign Up failed');
+                console.error('Signup error details:', result.error);
+                const errorMessage = result.error.message || 'Sign Up failed';
+                setError(errorMessage);
             } else {
+                console.log('Signup successful, redirecting to dashboard');
                 // Redirect to dashboard after successful signup
                 router.push('/dashboard');
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'An error occurred');
+            console.error('Signup exception:', error);
+            const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
