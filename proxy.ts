@@ -9,9 +9,9 @@ const protectedPaths = ["/dashboard", "/profile", "/settings", "/history", "/cha
 const publicPaths = ["/", "/login", "/signup", "/forget-password", "/api/auth"];
 
 /**
- * proxy to handle authentication and route protection
+ * Middleware to handle authentication and route protection
  */
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the current path is protected
