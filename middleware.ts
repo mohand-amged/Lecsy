@@ -9,9 +9,9 @@ const protectedPaths = ["/dashboard", "/profile", "/settings", "/history", "/cha
 const publicPaths = ["/", "/login", "/signup", "/forget-password", "/api/auth"];
 
 /**
- * Proxy to handle authentication and route protection
+ * Middleware to handle authentication and route protection
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the current path is protected
@@ -95,3 +95,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
+
