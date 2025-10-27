@@ -50,62 +50,93 @@ function LoginForm() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle>Login</CardTitle>
+            <Card className="w-full max-w-md shadow-xl">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
                     <CardDescription>Enter your credentials to access your account</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input 
-                                id="email" 
-                                type="email" 
-                                placeholder="email@example.com" 
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
+                                    id="email" 
+                                    type="email" 
+                                    placeholder="email@example.com" 
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    aria-required="true"
+                                    aria-invalid={error ? "true" : "false"}
+                                    className="h-11"
+                                    autoComplete="email"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="password">Password</Label>
+                                    <Link 
+                                        href="/forget-password"
+                                        className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                                        tabIndex={0}
+                                    >
+                                        Forgot password?
+                                    </Link>
+                                </div>
                                 <Input 
-                                id="password" 
-                                type="password" 
-                                placeholder="******" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
+                                    id="password" 
+                                    type="password" 
+                                    placeholder="••••••" 
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    disabled={loading}
+                                    aria-required="true"
+                                    aria-invalid={error ? "true" : "false"}
+                                    className="h-11"
+                                    autoComplete="current-password"
                                 />
                             </div>
-                            {error && <p className="text-red-500">{error}</p>}
+                            {error && (
+                                <div 
+                                    className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm flex items-start gap-2"
+                                    role="alert"
+                                    aria-live="polite"
+                                >
+                                    <span className="font-medium">Error:</span>
+                                    <span>{error}</span>
+                                </div>
+                            )}
                         </div>
-                        <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Logging in...' : 'Log in'}
+                        <Button 
+                            type="submit" 
+                            className="w-full h-11 font-semibold" 
+                            disabled={loading}
+                            aria-busy={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="mr-2">Logging in</span>
+                                    <span className="animate-pulse">…</span>
+                                </>
+                            ) : (
+                                'Log in'
+                            )}
                         </Button>
                     </form>
                 </CardContent>
-                <div className="mt-4 space-y-2 text-center text-sm">
-                    <div>
-                        Forgot your password? {" "}
+                <div className="px-6 pb-6 text-center text-sm">
+                    <p className="text-muted-foreground">
+                        Don&apos;t have an account?{" "}
                         <Link 
-                        href="/forget-password"
-                        className="text-primary hover:underline"
+                            href="/signup" 
+                            className="text-primary font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
                         >
-                            Reset Password
+                            Sign up
                         </Link>
-                    </div>
-                    <div>
-                        Don&apos;t Have an account {" "}
-                        <Link 
-                        href="/signup" 
-                        className="text-primary hover:underline"
-                        >
-                            Sign Up
-                        </Link>
-                    </div>
+                    </p>
                 </div>
             </Card>
         </div>

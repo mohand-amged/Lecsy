@@ -6,6 +6,7 @@ import { BenefitsSection } from "@/components/landing/benefits-section"
 import { SocialProofSection } from "@/components/landing/social-proof-section"
 import { FinalCTASection } from "@/components/landing/final-cta-section"
 import { Navigation } from "@/components/landing/navigation"
+import { Footer } from "@/components/landing/footer"
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       <BenefitsSection />
       <SocialProofSection />
       <FinalCTASection />
+      <Footer />
     </main>
   )
 }

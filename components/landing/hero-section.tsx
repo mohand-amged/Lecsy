@@ -54,7 +54,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="font-heading text-5xl font-bold leading-[1.1] text-balance text-foreground md:text-7xl lg:text-8xl tracking-tight"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.1] text-balance text-foreground tracking-tight"
           >
             Never Miss a{" "}
             <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-pulse">
@@ -68,7 +68,7 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="mx-auto mt-8 max-w-3xl text-xl leading-relaxed text-muted-foreground md:text-2xl lg:text-3xl font-light"
+            className="mx-auto mt-6 sm:mt-8 max-w-3xl text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed text-muted-foreground font-light px-4"
           >
             AI-powered transcription that works while you focus on learning
           </motion.p>
@@ -78,16 +78,20 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-10"
+            className="mt-8 sm:mt-10 px-4"
           >
             <Button
               size="lg"
-              className="h-16 bg-gradient-to-r from-primary to-secondary px-12 text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/50 active:scale-95"
+              className="h-14 sm:h-16 bg-gradient-to-r from-primary to-secondary px-8 sm:px-12 text-lg sm:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/50 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label="Start transcribing for free"
+              asChild
             >
-              Start Transcribing Free
-              <Sparkles className="ml-2 h-6 w-6" />
+              <a href="/signup">
+                Start Transcribing Free
+                <Sparkles className="ml-2 h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
+              </a>
             </Button>
-            <p className="mt-6 text-base text-muted-foreground font-medium">No credit card required • Free forever</p>
+            <p className="mt-4 sm:mt-6 text-sm sm:text-base text-muted-foreground font-medium">No credit card required • Free forever</p>
           </motion.div>
 
           {/* Hero visual mockup */}
