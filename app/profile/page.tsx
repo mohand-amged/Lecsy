@@ -2,7 +2,7 @@
 
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { NavBar } from "@/app/dashboard/components/NavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,7 @@ function ProfilePage() {
     }
   }, [session, isPending, router]);
 
-  const fetchRecentTranscriptions = async () => {
+  const fetchRecentTranscriptions = useCallback(async () => {
     try {
       const response = await fetch('/api/transcriptions');
       if (response.ok) {
@@ -52,9 +52,9 @@ function ProfilePage() {
     } finally {
       setLoadingHistory(false);
     }
-  };
+  }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
@@ -69,9 +69,9 @@ function ProfilePage() {
     if (diffInDays < 7) return `${diffInDays}d ago`;
 
     return date.toLocaleDateString();
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'completed':
         return 'text-green-400';
@@ -83,7 +83,27 @@ function ProfilePage() {
       default:
         return 'text-gray-400';
     }
-  };
+  }, []);
+
+  const userInitials = useMemo(() => {
+    const name = session?.user?.name;
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }, [session?.user?.name]);
+
+  const recentTranscriptionsWithFormatting = useMemo(
+    () => recentTranscriptions.map(trans => ({
+      ...trans,
+      formattedDate: formatDate(trans.createdAt.toString()),
+      statusColor: getStatusColor(trans.status)
+    })),
+    [recentTranscriptions, formatDate, getStatusColor]
+  );
 
   if (isPending) {
     return (
@@ -106,17 +126,7 @@ function ProfilePage() {
     );
   }
 
-  const getUserInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       // TODO: Implement profile update API call
@@ -127,24 +137,24 @@ function ProfilePage() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setFormData({
-      name: session.user.name || '',
-      email: session.user.email || '',
+      name: session?.user?.name || '',
+      email: session?.user?.email || '',
     });
     setIsEditing(false);
-  };
+  }, [session]);
 
-  const formatMemberDate = (dateString: string | undefined) => {
+  const formatMemberDate = useCallback((dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-black">
@@ -169,7 +179,7 @@ function ProfilePage() {
                       className="object-cover" 
                     />
                     <AvatarFallback className="bg-gradient-to-br from-black via-gray-800 to-gray-700 text-white text-3xl font-bold">
-                      {getUserInitials(session.user.name)}
+                      {userInitials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="absolute bottom-2 right-2 h-5 w-5 bg-green-500 border-4 border-gray-900 rounded-full">
@@ -357,7 +367,7 @@ function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {recentTranscriptions.map((trans) => (
+                {recentTranscriptionsWithFormatting.map((trans) => (
                   <div
                     key={trans.id}
                     onClick={() => router.push(`/chat?transcriptId=${trans.transcriptId}`)}
@@ -370,9 +380,9 @@ function ProfilePage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-medium text-sm truncate">{trans.name}</p>
                         <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                          <span>{formatDate(trans.createdAt.toString())}</span>
+                          <span>{trans.formattedDate}</span>
                           <span>•</span>
-                          <span className={getStatusColor(trans.status)}>{trans.status}</span>
+                          <span className={trans.statusColor}>{trans.status}</span>
                         </div>
                       </div>
                     </div>

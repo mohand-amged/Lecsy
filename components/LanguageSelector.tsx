@@ -1,4 +1,5 @@
 'use client';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -51,7 +52,10 @@ export function LanguageSelector({
   className = '',
   variant = 'default'
 }: LanguageSelectorProps) {
-  const selectedOption = LANGUAGE_OPTIONS.find(lang => lang.code === selectedLanguage) || LANGUAGE_OPTIONS[0];
+  const selectedOption = useMemo(
+    () => LANGUAGE_OPTIONS.find(lang => lang.code === selectedLanguage) || LANGUAGE_OPTIONS[0],
+    [selectedLanguage]
+  );
 
   if (variant === 'compact') {
     return (

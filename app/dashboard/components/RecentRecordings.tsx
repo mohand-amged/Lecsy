@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FileAudio, Edit2, Trash2, Loader2, FileText } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Transcription } from '@/db/schema';
 
@@ -24,7 +24,7 @@ export function RecentRecordings() {
   const [isRenaming, setIsRenaming] = useState(false);
   const router = useRouter();
 
-  const fetchTranscriptions = async () => {
+  const fetchTranscriptions = useCallback(async () => {
     try {
       const response = await fetch('/api/transcriptions');
       if (response.ok) {
@@ -36,13 +36,13 @@ export function RecentRecordings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchTranscriptions();
-  }, []);
+  }, [fetchTranscriptions]);
 
-  const handleRename = async () => {
+  const handleRename = useCallback(async () => {
     if (!editingId || !editName.trim()) return;
 
     setIsRenaming(true);
@@ -63,9 +63,9 @@ export function RecentRecordings() {
     } finally {
       setIsRenaming(false);
     }
-  };
+  }, [editingId, editName, fetchTranscriptions]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this transcription?')) return;
 
     try {
@@ -79,14 +79,14 @@ export function RecentRecordings() {
     } catch (error) {
       console.error('Failed to delete transcription:', error);
     }
-  };
+  }, [fetchTranscriptions]);
 
-  const openRenameDialog = (transcription: Transcription) => {
+  const openRenameDialog = useCallback((transcription: Transcription) => {
     setEditingId(transcription.id);
     setEditName(transcription.name);
-  };
+  }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
@@ -101,9 +101,9 @@ export function RecentRecordings() {
     if (diffInDays < 7) return `${diffInDays}d ago`;
 
     return date.toLocaleDateString();
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'completed':
         return 'text-green-400';
@@ -115,7 +115,16 @@ export function RecentRecordings() {
       default:
         return 'text-gray-400';
     }
-  };
+  }, []);
+
+  const displayedTranscriptions = useMemo(
+    () => transcriptions.slice(0, 10).map(trans => ({
+      ...trans,
+      formattedDate: formatDate(trans.createdAt.toString()),
+      statusColor: getStatusColor(trans.status)
+    })),
+    [transcriptions, formatDate, getStatusColor]
+  );
 
   return (
     <>
@@ -146,7 +155,7 @@ export function RecentRecordings() {
             </div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-              {transcriptions.slice(0, 10).map((trans) => (
+              {displayedTranscriptions.map((trans) => (
                 <div
                   key={trans.id}
                   className="flex items-center justify-between p-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-white hover:bg-gray-750 transition-all duration-300 group cursor-pointer hover:scale-[1.02] hover:shadow-xl"
@@ -162,9 +171,9 @@ export function RecentRecordings() {
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-semibold truncate transition-colors">{trans.name}</p>
                         <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                          <span className="font-medium">{formatDate(trans.createdAt.toString())}</span>
+                          <span className="font-medium">{trans.formattedDate}</span>
                           <span>•</span>
-                          <span className={`${getStatusColor(trans.status)} font-semibold`}>{trans.status}</span>
+                          <span className={`${trans.statusColor} font-semibold`}>{trans.status}</span>
                         </div>
                       </div>
                     </div>
