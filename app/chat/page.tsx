@@ -184,7 +184,7 @@ function ChatPageContent() {
         </div>
 
         {/* Transcription Result */}
-        {transcriptionData?.status === 'completed' && transcriptionData.text && (
+{transcriptionData?.status === 'completed' && transcriptionData.text && (
           <div className="bg-gray-900 rounded-xl border border-gray-700 p-8">
             <div className="flex items-center gap-3 mb-6">
               <FileText className="h-6 w-6 text-white" />
@@ -192,7 +192,11 @@ function ChatPageContent() {
             </div>
             
             <div className="bg-black rounded-lg p-6 border border-gray-600">
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+              <p 
+                className="text-gray-300 leading-relaxed whitespace-pre-wrap"
+                dir={transcriptionData.language === 'ar' ? 'rtl' : 'ltr'}
+                style={transcriptionData.language === 'ar' ? { textAlign: 'right' } : undefined}
+              >
                 {transcriptionData.text}
               </p>
             </div>

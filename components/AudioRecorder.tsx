@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mic, Square, Play, Pause, Trash2 } from 'lucide-react';
 import { LanguageSelector, SupportedLanguage } from '@/components/LanguageSelector';
+import { detectLanguageForAudio } from '@/lib/language-detection';
 
 interface AudioRecorderProps {
   onRecordingComplete?: (audioBlob: Blob, duration: number, language: SupportedLanguage) => void;
@@ -30,6 +31,7 @@ export function AudioRecorder({
   const [error, setError] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('auto');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -174,6 +176,24 @@ export function AudioRecorder({
     }
   };
 
+  const handleDetectLanguage = async () => {
+    if (!audioBlob) {
+      setError('No recording available to detect language.');
+      return;
+    }
+    setIsDetecting(true);
+    setError(null);
+    try {
+      const lang = await detectLanguageForAudio({ file: audioBlob });
+      setSelectedLanguage(lang);
+    } catch (e) {
+      console.error('Language detection error:', e);
+      setError(e instanceof Error ? e.message : 'Language detection failed');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
 
   return (
     <Card className={`bg-black border-gray-700 ${className}`}>
@@ -304,23 +324,40 @@ export function AudioRecorder({
               </Button>
               
               {showTranscribeButton && (
-                <Button
-                  onClick={handleTranscribe}
-                  disabled={isTranscribing}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {isTranscribing ? (
-                    <>
-                      <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Transcribing...
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4 mr-2" />
-                      Transcribe
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button
+                    onClick={handleDetectLanguage}
+                    variant="outline"
+                    disabled={isDetecting || !audioBlob}
+                    className="border-white text-white hover:bg-white hover:text-black"
+                  >
+                    {isDetecting ? (
+                      <>
+                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Detecting...
+                      </>
+                    ) : (
+                      <>Detect Language</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleTranscribe}
+                    disabled={isTranscribing}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isTranscribing ? (
+                      <>
+                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Transcribing...
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="h-4 w-4 mr-2" />
+                        Transcribe
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
             </div>
 

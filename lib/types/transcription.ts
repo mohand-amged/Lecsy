@@ -21,6 +21,12 @@ export interface AssemblyAITranscriptResponse {
   confidence?: number;
 }
 
+// ElevenLabs STT Types
+export interface ElevenLabsTranscriptionResponse {
+  text: string;
+  language: 'ar' | string;
+}
+
 // API Route Response Types
 export interface TranscribeStartResponse {
   success: boolean;
@@ -35,6 +41,7 @@ export interface TranscribeStatusResponse {
   text?: string;
   error?: string;
   confidence?: number;
+  language?: string;
 }
 
 // Form Data Types

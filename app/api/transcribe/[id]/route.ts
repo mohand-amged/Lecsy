@@ -14,19 +14,43 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!ASSEMBLYAI_API_KEY) {
-      return NextResponse.json(
-        { success: false, error: 'AssemblyAI API key not configured' },
-        { status: 500 }
-      );
-    }
-
     const { id: transcriptId } = await params;
 
     if (!transcriptId) {
       return NextResponse.json(
         { success: false, error: 'Transcript ID is required' },
         { status: 400 }
+      );
+    }
+
+    // First, attempt to load from DB (handles ElevenLabs immediate transcriptions)
+    try {
+      const [row] = await db.select().from(transcription).where(eq(transcription.transcriptId, transcriptId)).limit(1);
+      if (row) {
+        const rowStatus = (row.status as 'queued' | 'processing' | 'completed' | 'error') || 'completed';
+        const result: TranscribeStatusResponse = {
+          success: true,
+          status: rowStatus,
+          text: row.text ?? undefined,
+          language: row.language ?? undefined,
+        };
+        // If it's Arabic (ElevenLabs), we can return immediately without calling AssemblyAI
+        if (row.language === 'ar' || transcriptId.startsWith('el-')) {
+          return NextResponse.json(result);
+        }
+        // If completed and text exists, just return it (even for AssemblyAI completed)
+        if (rowStatus === 'completed' && row.text) {
+          return NextResponse.json(result);
+        }
+      }
+    } catch {
+      // Non-fatal; continue to external API
+    }
+
+    if (!ASSEMBLYAI_API_KEY) {
+      return NextResponse.json(
+        { success: false, error: 'AssemblyAI API key not configured' },
+        { status: 500 }
       );
     }
 

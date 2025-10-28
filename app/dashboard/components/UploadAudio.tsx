@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, Loader2, Link, Settings } from 'lucide-react';
 import { TranscribeStartResponse } from '@/lib/types/transcription';
 import { LanguageSelector, SupportedLanguage } from '@/components/LanguageSelector';
+import { detectLanguageForAudio } from '@/lib/language-detection';
 
 export function UploadAudio() {
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -16,6 +17,7 @@ export function UploadAudio() {
   const [useUrl, setUseUrl] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('auto');
   const [enhancedAccuracy, setEnhancedAccuracy] = useState(true);
+  const [isDetecting, setIsDetecting] = useState(false);
   const router = useRouter();
 
   const handleTranscription = async (file?: File, url?: string) => {
@@ -186,11 +188,43 @@ export function UploadAudio() {
       </div>
       
       {/* Language Selection */}
-      <LanguageSelector
-        selectedLanguage={selectedLanguage}
-        onLanguageChange={setSelectedLanguage}
-        className="mb-6"
-      />
+      <div className="flex items-center gap-3 mb-6">
+        <LanguageSelector
+          selectedLanguage={selectedLanguage}
+          onLanguageChange={setSelectedLanguage}
+        />
+        {useUrl && (
+          <Button
+            variant="outline"
+            onClick={async () => {
+              if (!audioUrl.trim()) {
+                alert('Enter an audio URL to detect language.');
+                return;
+              }
+              setIsDetecting(true);
+              try {
+                const lang = await detectLanguageForAudio({ audioUrl: audioUrl.trim() });
+                setSelectedLanguage(lang);
+              } catch (e) {
+                alert(e instanceof Error ? e.message : 'Language detection failed');
+              } finally {
+                setIsDetecting(false);
+              }
+            }}
+            disabled={isDetecting}
+            className="border-white text-white hover:bg-white hover:text-black"
+          >
+            {isDetecting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Detecting...
+              </>
+            ) : (
+              <>Detect Language</>
+            )}
+          </Button>
+        )}
+      </div>
       
       {!useUrl ? (
         /* File Upload Section */
@@ -288,6 +322,7 @@ export function UploadAudio() {
                 </>
               )}
             </Button>
+            <p className="text-xs text-gray-500 mt-2">Tip: Use Detect Language above to auto-select Arabic or English before transcribing.</p>
           </div>
         </div>
       )}
