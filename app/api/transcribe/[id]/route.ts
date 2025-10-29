@@ -110,14 +110,40 @@ export async function GET(
           if (transcriptData.text) {
             updateData.text = transcriptData.text;
           }
-          if (transcriptData.confidence !== undefined) {
-            updateData.confidence = transcriptData.confidence.toString();
+          if (transcriptData.confidence != null) {
+            updateData.confidence = String(transcriptData.confidence);
           }
 
           await db
             .update(transcription)
             .set(updateData)
             .where(eq(transcription.transcriptId, transcriptId));
+
+          // Create a notification when transcription completes (idempotent by resourceId)
+          if (transcriptData.status === 'completed') {
+            try {
+              const { notification } = await import('@/db/schema');
+              const { and, eq } = await import('drizzle-orm');
+              const existing = await db
+                .select()
+                .from(notification)
+                .where(and(eq(notification.userId, session.user.id), eq(notification.resourceId, transcriptId)))
+                .limit(1);
+              if (!existing.length) {
+                const { v4: uuidv4 } = await import('uuid');
+                await db.insert(notification).values({
+                  id: uuidv4(),
+                  userId: session.user.id,
+                  title: 'Transcription completed',
+                  body: 'Your audio transcription is ready to view.',
+                  type: 'transcription_completed',
+                  resourceId: transcriptId,
+                });
+              }
+            } catch (e) {
+              console.error('Failed to create notification:', e);
+            }
+          }
         }
       } catch (dbError) {
         console.error('Failed to update transcription in database:', dbError);

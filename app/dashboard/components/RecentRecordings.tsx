@@ -15,6 +15,7 @@ import { FileAudio, Edit2, Trash2, Loader2, FileText } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Transcription } from '@/db/schema';
+import { toast } from 'sonner';
 
 export function RecentRecordings() {
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
@@ -57,9 +58,13 @@ export function RecentRecordings() {
         await fetchTranscriptions();
         setEditingId(null);
         setEditName('');
+        toast.success('Name updated');
+      } else {
+        toast.error('Failed to rename');
       }
     } catch (error) {
       console.error('Failed to rename transcription:', error);
+      toast.error('Failed to rename');
     } finally {
       setIsRenaming(false);
     }
@@ -75,6 +80,9 @@ export function RecentRecordings() {
 
       if (response.ok) {
         await fetchTranscriptions();
+        toast.success('Transcription deleted');
+      } else {
+        toast.error('Failed to delete');
       }
     } catch (error) {
       console.error('Failed to delete transcription:', error);

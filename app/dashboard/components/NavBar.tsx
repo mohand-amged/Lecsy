@@ -23,18 +23,55 @@ import {
   CreditCard,
   HelpCircle
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+type NotificationPreview = { id: string; title: string; body: string | null; read: boolean };
 
 export function NavBar() {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [recent, setRecent] = useState<NotificationPreview[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
+
+  const fetchUnread = async () => {
+    try {
+      const res = await fetch('/api/notifications?unreadCountOnly=1');
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadNotifications(data.unreadCount || 0);
+      }
+    } catch {}
+  };
+
+  const fetchRecent = async () => {
+    try {
+      setRecentLoading(true);
+      const res = await fetch('/api/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        setRecent((data.notifications || []).slice(0, 8));
+      }
+    } finally {
+      setRecentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user) fetchUnread();
+    const id = setInterval(fetchUnread, 30000);
+    return () => { clearInterval(id); };
+  }, [session?.user]);
+
   // Mock user stats - replace with real data from your API
   const userStats = {
     totalUploads: 12,
     totalMinutes: 145,
     subscription: 'Free', // or 'Pro', 'Premium'
-    unreadNotifications: 3
+    unreadNotifications,
   };
 
   const handleSignOut = async () => {
@@ -99,28 +136,63 @@ export function NavBar() {
               </Button>
               */}
 
-              {/* Notifications Bell */}
+              {/* Notifications Bell + Dropdown */}
               <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="relative p-2.5 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 group"
-                  onClick={() => router.push('/notifications')}
-                  aria-label={`Notifications ${userStats.unreadNotifications > 0 ? `(${userStats.unreadNotifications} unread)` : ''}`}
-                >
-                  <Bell className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
-                  {userStats.unreadNotifications > 0 && (
-                    <>
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs animate-pulse"
-                      >
-                        {userStats.unreadNotifications > 9 ? '9+' : userStats.unreadNotifications}
-                      </Badge>
-                      <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full animate-ping opacity-75"></div>
-                    </>
-                  )}
-                </Button>
+                <DropdownMenu open={notifOpen} onOpenChange={(v) => { setNotifOpen(v); if (v) { fetchRecent(); fetchUnread(); } }}>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="relative p-2.5 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 group"
+                      aria-label={`Notifications ${userStats.unreadNotifications > 0 ? `(${userStats.unreadNotifications} unread)` : ''}`}
+                    >
+                      <Bell className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+                      {userStats.unreadNotifications > 0 && (
+                        <>
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs animate-pulse"
+                          >
+                            {userStats.unreadNotifications > 9 ? '9+' : userStats.unreadNotifications}
+                          </Badge>
+                          <div className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                        </>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-96 bg-white text-black p-0 rounded-xl overflow-hidden shadow-xl">
+                    <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                      <div className="font-semibold">Notifications</div>
+                      <Button variant="outline" size="sm" className="h-7" onClick={() => { fetch('/api/notifications/mark-all-read', { method: 'POST' }).then(() => { setRecent((prev) => prev.map(n => ({...n, read: true}))); setUnreadNotifications(0); }); }}>
+                        Mark all read
+                      </Button>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {recentLoading ? (
+                        <div className="p-6 text-sm text-gray-500">Loading...</div>
+                      ) : recent.length === 0 ? (
+                        <div className="p-6 text-sm text-gray-500">No notifications</div>
+                      ) : (
+                        <ul className="divide-y divide-gray-100">
+                          {recent.map((n) => (
+                            <li key={n.id} className="p-4 hover:bg-gray-50 cursor-default">
+                              <div className="flex items-start gap-3">
+                                {!n.read && <span className="mt-1 inline-block h-2 w-2 rounded-full bg-red-500" />}
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-black truncate">{n.title}</p>
+                                  {n.body && <p className="text-xs text-gray-600 line-clamp-2">{n.body}</p>}
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="p-3 border-t border-gray-200">
+                      <Button className="w-full" onClick={() => { setNotifOpen(false); router.push('/notifications'); }}>View all</Button>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* User Info Card */}
@@ -251,8 +323,8 @@ export function NavBar() {
                       className="cursor-pointer hover:bg-gray-50 text-black rounded-lg p-4 transition-colors duration-200 group"
                       onClick={() => router.push('/dashboard')}
                     >
-                      <div className="flex items-center justify-center w-10 h-10 bg-black rounded-lg mr-3 group-hover:bg-gray-800 transition-colors">
-                        <Upload className="h-5 w-5 text-white" />
+                      <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mr-3 group-hover:bg-gray-200 transition-colors">
+                        <Upload className="h-5 w-5 text-gray-600" />
                       </div>
                       <div className="flex-1">
                         <span className="font-semibold text-sm">Upload Audio</span>

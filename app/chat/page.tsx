@@ -5,6 +5,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2, FileText, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { TranscribeStatusResponse } from '@/lib/types/transcription';
+import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import html2canvas from 'html2canvas';
 
 function ChatPageContent() {
   const searchParams = useSearchParams();
@@ -201,30 +205,107 @@ function ChatPageContent() {
               </p>
             </div>
             
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Button 
-                onClick={() => navigator.clipboard.writeText(transcriptionData.text || '')}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(transcriptionData.text || '');
+                    toast.success('Transcript copied to clipboard');
+                  } catch {
+                    toast.error('Failed to copy transcript');
+                  }
+                }}
                 variant="outline"
                 className="border-gray-600 text-white hover:bg-gray-800"
               >
                 Copy Transcript
               </Button>
               <Button 
-                onClick={() => {
-                  const blob = new Blob([transcriptionData.text || ''], { type: 'text/plain' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `transcript-${transcriptId}.txt`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
+                onClick={async () => {
+                  try {
+                    // Ensure html2canvas is available for jsPDF html plugin
+                    (window as any).html2canvas = html2canvas;
+
+                    const isArabic = /[\u0600-\u06FF]/.test(transcriptionData.language || '') || /[\u0600-\u06FF]/.test(transcriptionData.text || '');
+
+                    // Build an off-DOM container to render the transcript as HTML for accurate RTL shaping
+                    const container = document.createElement('div');
+                    container.style.position = 'fixed';
+                    container.style.left = '-10000px';
+                    container.style.top = '0';
+                    container.style.width = '800px';
+                    container.style.padding = '24px';
+                    container.style.background = '#ffffff';
+                    container.style.color = '#000000';
+                    container.style.lineHeight = '1.6';
+                    container.style.fontSize = '12pt';
+                    container.style.whiteSpace = 'pre-wrap';
+                    if (isArabic) {
+                      container.setAttribute('dir', 'rtl');
+                      container.style.textAlign = 'right';
+                      container.style.fontFamily = `'Noto Naskh Arabic', 'Amiri', system-ui, -apple-system, Segoe UI, Arial`;
+                    } else {
+                      container.style.fontFamily = `Georgia, 'Times New Roman', Times, serif`;
+                    }
+                    container.textContent = transcriptionData.text || '';
+
+                    document.body.appendChild(container);
+
+                    const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const margin = 40;
+
+                    await doc.html(container, {
+                      x: margin,
+                      y: margin,
+                      width: pageWidth - margin * 2,
+                      windowWidth: 800,
+                      callback: (doc) => {
+                        doc.save(`transcript-${transcriptId}.pdf`);
+                        toast.success('PDF downloaded');
+                        document.body.removeChild(container);
+                      },
+                      autoPaging: 'text',
+                      html2canvas: { scale: 2, useCORS: true },
+                    });
+                  } catch (e) {
+                    console.error(e);
+                    toast.error('Failed to generate PDF');
+                  }
                 }}
                 variant="outline"
                 className="border-gray-600 text-white hover:bg-gray-800"
               >
-                Download Transcript
+                Download as PDF
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    const content = (transcriptionData.text || '').split('\n').map(line => new Paragraph({
+                      children: [new TextRun(line)],
+                    }));
+                    const doc = new Document({
+                      sections: [{ properties: {}, children: content }],
+                    });
+                    const blob = await Packer.toBlob(doc);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `transcript-${transcriptId}.docx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    toast.success('Word document downloaded');
+                  } catch {
+                    toast.error('Failed to generate Word document');
+                  }
+                }}
+                variant="outline"
+                className="border-gray-600 text-white hover:bg-gray-800"
+              >
+                Download as Word
               </Button>
             </div>
           </div>

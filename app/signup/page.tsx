@@ -7,6 +7,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -52,10 +53,16 @@ export default function SignUpPage() {
 
             if (result.error) {
                 console.error('Signup error details:', result.error);
-                const errorMessage = result.error.message || 'Sign Up failed';
+                let errorMessage = result.error.message || 'Sign Up failed';
+                const lower = errorMessage.toLowerCase();
+                if (lower.includes('unique') || lower.includes('duplicate') || lower.includes('already')) {
+                    errorMessage = 'Email already in use. Please sign in or use a different email.';
+                }
                 setError(errorMessage);
+                toast.error(errorMessage);
             } else {
                 console.log('Signup successful, redirecting to dashboard');
+                toast.success('Account created successfully');
                 // Redirect to dashboard after successful signup
                 router.push('/dashboard');
             }
@@ -63,6 +70,7 @@ export default function SignUpPage() {
             console.error('Signup exception:', error);
             const errorMessage = error instanceof Error ? error.message : 'An error occurred';
             setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

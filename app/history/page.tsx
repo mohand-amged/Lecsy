@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { FileAudio, Edit2, Trash2, Loader2, FileText, History } from 'lucide-react';
 import type { Transcription } from '@/db/schema';
+import { toast } from 'sonner';
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -70,9 +71,13 @@ export default function HistoryPage() {
         await fetchTranscriptions();
         setEditingId(null);
         setEditName('');
+        toast.success('Name updated');
+      } else {
+        toast.error('Failed to rename');
       }
     } catch (error) {
       console.error('Failed to rename transcription:', error);
+      toast.error('Failed to rename');
     } finally {
       setIsRenaming(false);
     }
@@ -88,6 +93,9 @@ export default function HistoryPage() {
 
       if (response.ok) {
         await fetchTranscriptions();
+        toast.success('Transcription deleted');
+      } else {
+        toast.error('Failed to delete');
       }
     } catch (error) {
       console.error('Failed to delete transcription:', error);

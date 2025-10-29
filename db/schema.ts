@@ -81,15 +81,23 @@ export const transcription = pgTable("transcription", {
     .notNull(),
 });
 
-
-
-
+export const notification = pgTable("notification", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  body: text("body"),
+  type: text("type"),
+  resourceId: text("resource_id"),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   transcriptions: many(transcription),
+  notifications: many(notification),
 }));
 
 
@@ -117,11 +125,20 @@ export const transcriptionRelations = relations(transcription, ({ one }) => ({
   }),
 }));
 
+export const notificationRelations = relations(notification, ({ one }) => ({
+  user: one(user, {
+    fields: [notification.userId],
+    references: [user.id],
+  }),
+}));
+
 // Type exports
 export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
 export type Transcription = typeof transcription.$inferSelect;
 export type NewTranscription = typeof transcription.$inferInsert;
+export type Notification = typeof notification.$inferSelect;
+export type NewNotification = typeof notification.$inferInsert;
 
 export const schema = {
   user,
@@ -129,8 +146,10 @@ export const schema = {
   account,
   verification,
   transcription,
+  notification,
   userRelations,
   sessionRelations,
   accountRelations,
   transcriptionRelations,
+  notificationRelations,
 };

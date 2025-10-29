@@ -57,6 +57,13 @@
       "when": 1761312768075,
       "tag": "0007_broken_energizer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1761751898970,
+      "tag": "0008_lively_rhodey",
+      "breakpoints": true
     }
   ]
 }
