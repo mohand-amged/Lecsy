@@ -224,7 +224,7 @@ function ChatPageContent() {
                 onClick={async () => {
                   try {
                     // Ensure html2canvas is available for jsPDF html plugin
-                    (window as any).html2canvas = html2canvas;
+                    (globalThis as unknown as { html2canvas: typeof html2canvas }).html2canvas = html2canvas;
 
                     const isArabic = /[\u0600-\u06FF]/.test(transcriptionData.language || '') || /[\u0600-\u06FF]/.test(transcriptionData.text || '');
 
@@ -253,7 +253,6 @@ function ChatPageContent() {
 
                     const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
                     const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
                     const margin = 40;
 
                     await doc.html(container, {

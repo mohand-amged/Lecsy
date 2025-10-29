@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Calendar, Shield, Upload, Loader2, FileText, History as HistoryIcon } from "lucide-react";
+import { User, Mail, Calendar, Shield, Upload, Loader2, FileText, History as HistoryIcon, ChevronRight } from "lucide-react";
 import type { Transcription } from '@/db/schema';
 
 function ProfilePage() {
@@ -371,14 +371,16 @@ function ProfilePage() {
                   <div
                     key={trans.id}
                     onClick={() => router.push(`/chat?transcriptId=${trans.transcriptId}`)}
-                    className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-white hover:bg-gray-750 transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700 hover:border-white hover:bg-gray-700 transition-all cursor-pointer group"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="p-2 bg-white rounded-lg">
                         <FileText className="h-4 w-4 text-black" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium text-sm truncate">{trans.name}</p>
+                        <p className="text-white font-medium text-sm truncate group-hover:text-white">
+                          {trans.name}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
                           <span>{trans.formattedDate}</span>
                           <span>•</span>
@@ -386,6 +388,7 @@ function ProfilePage() {
                         </div>
                       </div>
                     </div>
+                    <ChevronRight className="h-4 w-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ))}
               </div>

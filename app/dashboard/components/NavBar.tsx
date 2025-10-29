@@ -251,7 +251,7 @@ export function NavBar() {
                     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-t-xl">
                       <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <Avatar className="h-14 w-14 ring-3 ring-white shadow-lg">
+                          <Avatar className="h-14 w-14 ring-2 ring-white shadow-lg">
                             <AvatarImage 
                               src={session.user.image || ''} 
                               alt={session.user.name || 'User avatar'}
@@ -261,7 +261,7 @@ export function NavBar() {
                               {getUserInitials(session.user.name)}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 border-3 border-white rounded-full">
+                          <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 border-2 border-white rounded-full">
                             <div className="absolute inset-0 bg-green-500 rounded-full animate-pulse"></div>
                           </div>
                         </div>
