@@ -20,6 +20,20 @@ import type { Transcription } from '@/db/schema';
 import { toast } from 'sonner';
 
 export default function HistoryPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <HistoryContent />;
+}
+
+function HistoryContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
@@ -303,8 +317,3 @@ export default function HistoryPage() {
     </div>
   );
 }
-
-
-export const dynamic = 'force-dynamic';
-
-export const runtime = 'edge';

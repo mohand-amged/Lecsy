@@ -9,6 +9,20 @@ import { useEffect, useState } from 'react';
 type NotificationItem = { id: string; title: string; body: string | null; read: boolean };
 
 export default function NotificationsPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <NotificationsContent />;
+}
+
+function NotificationsContent() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
@@ -130,6 +144,3 @@ export default function NotificationsPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';
-export const runtime = 'edge';

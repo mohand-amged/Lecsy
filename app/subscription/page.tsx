@@ -88,6 +88,20 @@ const plans = [
 ];
 
 export default function SubscriptionPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <SubscriptionContent />;
+}
+
+function SubscriptionContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [currentPlan] = useState('free');
@@ -369,9 +383,3 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-
-// Force dynamic rendering to prevent prerender issues
-export const dynamic = 'force-dynamic';
-
-// Alternative: You can also use this to mark as client-only
-export const runtime = 'edge';

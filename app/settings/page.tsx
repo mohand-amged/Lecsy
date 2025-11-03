@@ -31,6 +31,20 @@ type ThemeMode = 'light' | 'dark' | 'system';
 type Language = 'en' | 'es' | 'fr' | 'de' | 'ar';
 
 export default function SettingsPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <SettingsContent />;
+}
+
+function SettingsContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [isSaving, setIsSaving] = useState(false);
@@ -580,8 +594,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-export const dynamic = 'force-dynamic';
-
-// Alternative: You can also use this to mark as client-only
-export const runtime = 'edge';

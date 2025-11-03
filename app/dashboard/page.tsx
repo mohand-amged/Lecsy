@@ -2,7 +2,7 @@
 
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatsCard } from "./components/StatsCard";
 import { UploadAudio } from "./components/UploadAudio";
 import { NavBar } from "./components/NavBar";
@@ -11,6 +11,20 @@ import { useDashboard } from "@/hooks/useDashboard";
 import { AudioLines, Clock, Upload } from "lucide-react";
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <DashboardContent />;
+}
+
+function DashboardContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const { stats, loading: statsLoading } = useDashboard();
@@ -80,3 +94,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

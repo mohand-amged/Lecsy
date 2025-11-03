@@ -84,34 +84,6 @@ export function FinalCTASection() {
           </div>
         </motion.div>
       </div>
-
-      {/* Footer */}
-      <footer className="mt-20 border-t border-border/40 pt-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-heading text-xl font-bold text-foreground">Lecsy</span>
-            </div>
-
-            <p className="text-sm text-muted-foreground">© 2025 Lecsy. All rights reserved.</p>
-
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <a href="#" className="transition-colors hover:text-foreground">
-                Privacy
-              </a>
-              <a href="#" className="transition-colors hover:text-foreground">
-                Terms
-              </a>
-              <a href="#" className="transition-colors hover:text-foreground">
-                Contact
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </section>
   )
 }

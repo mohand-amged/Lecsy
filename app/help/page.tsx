@@ -20,9 +20,23 @@ import {
   Crown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function HelpPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return <HelpContent />;
+}
+
+function HelpContent() {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -211,6 +225,3 @@ export default function HelpPage() {
     </div>
   );
 }
-
-export const dynamic = "force-dynamic";
-export const runtime = "edge";

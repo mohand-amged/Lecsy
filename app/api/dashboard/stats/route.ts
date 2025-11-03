@@ -4,6 +4,8 @@ import { db } from '@/db/drizzle';
 import { transcription } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth.api.getSession({

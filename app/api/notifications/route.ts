@@ -5,6 +5,8 @@ import { and, desc, eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // GET: list notifications and unread count for current user
 export async function GET(request: NextRequest) {
   try {

@@ -6,6 +6,8 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 
+export const dynamic = 'force-dynamic';
+
 // GET - List all transcriptions for the current user
 export async function GET() {
   try {
