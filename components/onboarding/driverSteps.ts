@@ -1,6 +1,6 @@
-import type { DriverStep } from "driver.js";
+import type { DriveStep } from "driver.js";
 
-export const dashboardDriverSteps: DriverStep[] = [
+export const dashboardDriverSteps: DriveStep[] = [
   {
     element: "[data-tour='nav-bar']",
     popover: {
