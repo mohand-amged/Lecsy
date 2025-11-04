@@ -9,8 +9,10 @@ import { NavBar } from "./components/NavBar";
 import { WelcomeBanner } from "./components/WelcomeBanner";
 import { useDashboard } from "@/hooks/useDashboard";
 import { AudioLines, Clock, Upload } from "lucide-react";
-import { Tour, isTourCompleted } from "@/components/onboarding/Tour";
-import { dashboardTourSteps } from "@/components/onboarding/tourSteps";
+import { driver } from "driver.js";
+import { dashboardDriverSteps } from "@/components/onboarding/driverSteps";
+
+const TOUR_KEY = 'onboarding.tourCompleted';
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -30,17 +32,35 @@ function DashboardContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const { stats, loading: statsLoading } = useDashboard();
-  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending) {
       if (!session) {
         router.push('/login');
       } else {
-        // Auto-open tour for first-time users (local-only persistence)
-        if (!isTourCompleted()) {
-          // Small delay to ensure targets are rendered
-          const t = setTimeout(() => setTourOpen(true), 400);
+        // Auto-open tour once per user (local-only persistence)
+        if (typeof window !== 'undefined' && !localStorage.getItem(TOUR_KEY)) {
+          const run = () => {
+            const d = driver({
+              showProgress: true,
+              overlayColor: 'rgba(0,0,0,0.6)',
+              stagePadding: 6,
+              allowClose: true,
+              nextBtnText: 'Next',
+              prevBtnText: 'Back',
+              doneBtnText: 'Finish',
+              steps: dashboardDriverSteps,
+            });
+            d.drive();
+            // Mark complete when tour is closed (finished or skipped)
+            try {
+              // @ts-expect-error - event API may not be typed
+              d.on?.('destroyed', () => localStorage.setItem(TOUR_KEY, 'true'));
+            } catch {
+              localStorage.setItem(TOUR_KEY, 'true');
+            }
+          };
+          const t = setTimeout(run, 500);
           return () => clearTimeout(t);
         }
       }
@@ -101,9 +121,6 @@ function DashboardContent() {
           <UploadAudio />
         </div>
       </div>
-
-      {/* Onboarding Tour */}
-      <Tour steps={dashboardTourSteps} isOpen={tourOpen} onClose={() => setTourOpen(false)} />
     </div>
   );
 }
