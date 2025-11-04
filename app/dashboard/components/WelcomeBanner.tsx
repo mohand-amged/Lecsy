@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { Sparkles, TrendingUp, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTimeGreeting } from '@/components/onboarding/useTimeGreeting';
 
 interface WelcomeBannerProps {
   className?: string;
@@ -12,6 +13,7 @@ interface WelcomeBannerProps {
 export function WelcomeBanner({ className = '' }: WelcomeBannerProps) {
   const { data: session } = useSession();
   const [isVisible, setIsVisible] = useState(true);
+  const greeting = useTimeGreeting();
   
   const userName = session?.user?.name || 'User';
   const firstName = userName.split(' ')[0];
@@ -21,16 +23,8 @@ export function WelcomeBanner({ className = '' }: WelcomeBannerProps) {
     return null;
   }
   
-  // Get current time for greeting
-  const currentHour = new Date().getHours();
-  const getGreeting = () => {
-    if (currentHour < 12) return 'Good morning';
-    if (currentHour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   return (
-    <div className={`relative overflow-hidden bg-gray-900 border border-gray-700 rounded-2xl p-8 mb-8 shadow-2xl ${className}`}>
+    <div className={`relative overflow-hidden bg-gray-900 border border-gray-700 rounded-2xl p-8 mb-8 shadow-2xl ${className}`} data-tour="welcome-banner">
       {/* Shimmer effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" style={{ animation: 'shimmer 3s infinite' }} />
       
@@ -53,7 +47,7 @@ export function WelcomeBanner({ className = '' }: WelcomeBannerProps) {
             </div>
             <div>
               <h1 className="text-4xl font-black text-white">
-                {getGreeting()}, {firstName}! 🎓
+                {greeting}, {firstName}! 🎓
               </h1>
               <p className="text-gray-400 text-lg mt-2 font-medium">
                 Ready to transform your lectures into interactive content? ✨
@@ -62,7 +56,7 @@ export function WelcomeBanner({ className = '' }: WelcomeBannerProps) {
           </div>
           
           {/* Quick Stats */}
-          <div className="flex flex-wrap items-center gap-4 mt-6">
+          <div className="flex flex-wrap items-center gap-4 mt-6" data-tour="stats-cards">
             <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2">
               <TrendingUp className="h-5 w-5 text-white" />
               <span className="text-gray-300 font-semibold">12 files uploaded</span>

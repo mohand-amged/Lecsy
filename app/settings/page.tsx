@@ -560,6 +560,17 @@ function SettingsContent() {
                 >
                   Help & Support
                 </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start border-gray-700 hover:bg-gray-800 text-white"
+                  onClick={() => {
+                    // Clear tour flag so it auto-starts next time on dashboard
+                    import("@/components/onboarding/Tour").then(({ clearTourCompleted }) => clearTourCompleted());
+                  }}
+                  aria-label="Restart onboarding tour"
+                >
+                  Restart Onboarding Tour
+                </Button>
               </div>
             </CardContent>
           </Card>

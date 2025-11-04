@@ -9,6 +9,8 @@ import { NavBar } from "./components/NavBar";
 import { WelcomeBanner } from "./components/WelcomeBanner";
 import { useDashboard } from "@/hooks/useDashboard";
 import { AudioLines, Clock, Upload } from "lucide-react";
+import { Tour, isTourCompleted } from "@/components/onboarding/Tour";
+import { dashboardTourSteps } from "@/components/onboarding/tourSteps";
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -28,11 +30,19 @@ function DashboardContent() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const { stats, loading: statsLoading } = useDashboard();
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending) {
       if (!session) {
         router.push('/login');
+      } else {
+        // Auto-open tour for first-time users (local-only persistence)
+        if (!isTourCompleted()) {
+          // Small delay to ensure targets are rendered
+          const t = setTimeout(() => setTourOpen(true), 400);
+          return () => clearTimeout(t);
+        }
       }
     }
   }, [session, isPending, router]);
@@ -62,7 +72,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-black">
-      <NavBar />
+      <NavBar data-tour="nav-bar" />
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         {/* Welcome Banner */}
         <WelcomeBanner className="mt-6 animate-in fade-in duration-500" />
@@ -87,10 +97,13 @@ function DashboardContent() {
         </div>
 
         {/* Upload Section - Full Width */}
-        <div className="animate-in slide-in-from-left duration-700 mb-8">
+        <div className="animate-in slide-in-from-left duration-700 mb-8" data-tour="upload-audio">
           <UploadAudio />
         </div>
       </div>
+
+      {/* Onboarding Tour */}
+      <Tour steps={dashboardTourSteps} isOpen={tourOpen} onClose={() => setTourOpen(false)} />
     </div>
   );
 }
