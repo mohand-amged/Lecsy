@@ -37,12 +37,14 @@ export function Tour({ steps, isOpen, onClose, onComplete }: TourProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const nextBtnRef = useRef<HTMLButtonElement>(null);
+  const targetElRef = useRef<HTMLElement | null>(null);
 
   const step = steps[current];
 
   const updateTargetRect = () => {
     if (!step) return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
+    const el = (document.querySelector(step.selector) as HTMLElement | null) || null;
+    targetElRef.current = el;
     if (el) {
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
@@ -74,6 +76,18 @@ export function Tour({ steps, isOpen, onClose, onComplete }: TourProps) {
       setTimeout(updateTargetRect, 350);
     } catch {}
 
+    // Observe size/position changes of target
+    let resizeObs: ResizeObserver | null = null;
+    let mutationObs: MutationObserver | null = null;
+    if (targetElRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObs = new ResizeObserver(() => updateTargetRect());
+      resizeObs.observe(targetElRef.current);
+    }
+    if (targetElRef.current && typeof MutationObserver !== 'undefined') {
+      mutationObs = new MutationObserver(() => updateTargetRect());
+      mutationObs.observe(targetElRef.current, { attributes: true, childList: true, subtree: true });
+    }
+
     const handleResize = () => updateTargetRect();
     const handleKey = (e: KeyboardEvent) => {
       if (!visible) return;
@@ -92,6 +106,8 @@ export function Tour({ steps, isOpen, onClose, onComplete }: TourProps) {
     window.addEventListener("scroll", handleResize, true);
     window.addEventListener("keydown", handleKey);
     return () => {
+      if (resizeObs && targetElRef.current) resizeObs.disconnect();
+      if (mutationObs) mutationObs.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleResize, true);
       window.removeEventListener("keydown", handleKey);
@@ -134,47 +150,52 @@ export function Tour({ steps, isOpen, onClose, onComplete }: TourProps) {
     const tooltipEl = tooltipRef.current;
     const tooltipHeight = tooltipEl?.getBoundingClientRect().height ?? 140;
 
+    const centeredLeft = (targetRect.left + (targetRect.width - TOOLTIP_WIDTH) / 2);
+    const clampedLeft = Math.min(
+      Math.max(8, centeredLeft),
+      window.innerWidth - TOOLTIP_WIDTH - 8
+    );
+
+    const place = step?.placement;
+
+    const tryBottom = () => ({
+      top: `${window.scrollY + targetRect.bottom + TOOLTIP_MARGIN}px`,
+      left: `${window.scrollX + clampedLeft}px`,
+      transform: "none" as const,
+    });
+    const tryTop = () => ({
+      top: `${window.scrollY + targetRect.top - tooltipHeight - TOOLTIP_MARGIN}px`,
+      left: `${window.scrollX + clampedLeft}px`,
+      transform: "none" as const,
+    });
+    const tryRight = () => ({
+      top: `${window.scrollY + Math.max(8, targetRect.top)}px`,
+      left: `${window.scrollX + targetRect.right + TOOLTIP_MARGIN}px`,
+      transform: "none" as const,
+    });
+    const tryLeft = () => ({
+      top: `${window.scrollY + Math.max(8, targetRect.top)}px`,
+      left: `${window.scrollX + targetRect.left - TOOLTIP_WIDTH - TOOLTIP_MARGIN}px`,
+      transform: "none" as const,
+    });
+
     const spaceAbove = targetRect.top;
     const spaceBelow = window.innerHeight - targetRect.bottom;
     const spaceLeft = targetRect.left;
     const spaceRight = window.innerWidth - targetRect.right;
 
-    // Prefer bottom, then top, then right, then left
-    if (spaceBelow >= tooltipHeight + TOOLTIP_MARGIN) {
-      return {
-        top: `${window.scrollY + targetRect.bottom + TOOLTIP_MARGIN}px`,
-        left: `${window.scrollX + Math.min(
-          Math.max(8, targetRect.left),
-          window.innerWidth - TOOLTIP_WIDTH - 8
-        )}px`,
-        transform: "none",
-      };
-    }
-    if (spaceAbove >= tooltipHeight + TOOLTIP_MARGIN) {
-      return {
-        top: `${window.scrollY + targetRect.top - tooltipHeight - TOOLTIP_MARGIN}px`,
-        left: `${window.scrollX + Math.min(
-          Math.max(8, targetRect.left),
-          window.innerWidth - TOOLTIP_WIDTH - 8
-        )}px`,
-        transform: "none",
-      };
-    }
-    if (spaceRight >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) {
-      return {
-        top: `${window.scrollY + Math.max(8, targetRect.top)}px`,
-        left: `${window.scrollX + targetRect.right + TOOLTIP_MARGIN}px`,
-        transform: "none",
-      };
-    }
-    if (spaceLeft >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) {
-      return {
-        top: `${window.scrollY + Math.max(8, targetRect.top)}px`,
-        left: `${window.scrollX + targetRect.left - TOOLTIP_WIDTH - TOOLTIP_MARGIN}px`,
-        transform: "none",
-      };
-    }
-    // Fallback to centered
+    // Respect explicit placement if possible
+    if (place === 'bottom' && spaceBelow >= tooltipHeight + TOOLTIP_MARGIN) return tryBottom();
+    if (place === 'top' && spaceAbove >= tooltipHeight + TOOLTIP_MARGIN) return tryTop();
+    if (place === 'right' && spaceRight >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) return tryRight();
+    if (place === 'left' && spaceLeft >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) return tryLeft();
+
+    // Auto: prefer bottom, then top, then right, then left
+    if (spaceBelow >= tooltipHeight + TOOLTIP_MARGIN) return tryBottom();
+    if (spaceAbove >= tooltipHeight + TOOLTIP_MARGIN) return tryTop();
+    if (spaceRight >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) return tryRight();
+    if (spaceLeft >= TOOLTIP_WIDTH + TOOLTIP_MARGIN) return tryLeft();
+
     return defaultStyle;
   };
 
@@ -196,12 +217,13 @@ export function Tour({ steps, isOpen, onClose, onComplete }: TourProps) {
       {/* Highlight box for target with background dim via giant shadow */}
       {targetRect && (
         <div
-          className="absolute pointer-events-none border-2 border-white/80 rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all"
+          className="absolute pointer-events-none border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all"
           style={{
-            top: `${Math.max(8, window.scrollY + targetRect.top - 8)}px`,
-            left: `${Math.max(8, window.scrollX + targetRect.left - 8)}px`,
-            width: `${targetRect.width + 16}px`,
-            height: `${targetRect.height + 16}px`,
+            top: `${Math.max(0, window.scrollY + targetRect.top)}px`,
+            left: `${Math.max(0, window.scrollX + targetRect.left)}px`,
+            width: `${targetRect.width}px`,
+            height: `${targetRect.height}px`,
+            borderRadius: targetElRef.current ? getComputedStyle(targetElRef.current).borderRadius : '12px',
           }}
           aria-hidden="true"
         />

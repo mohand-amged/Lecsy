@@ -145,6 +145,7 @@ export function NavBar() {
                       size="sm" 
                       className="relative p-2.5 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 group"
                       aria-label={`Notifications ${userStats.unreadNotifications > 0 ? `(${userStats.unreadNotifications} unread)` : ''}`}
+                      data-tour="notifications"
                     >
                       <Bell className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
                       {userStats.unreadNotifications > 0 && (
